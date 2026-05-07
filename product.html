@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menha Boutique - Product Details</title>
+    <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@0.407.0/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* ── Page wrapper ─────────────────────────────────── */
+        #product-detail-container {
+            padding: 0;
+            max-width: 100%;
+        }
+
+        /* ── Layout ───────────────────────────────────────── */
+        .pd-layout {
+            display: flex;
+            flex-direction: column;
+            background: #f4f6f8;
+            min-height: 100vh;
+        }
+
+        /* ── Image gallery ────────────────────────────────── */
+        .pd-gallery {
+            background: #fff;
+            position: relative;
+        }
+
+        .pd-main-img-wrap {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-height: 380px;
+            overflow: hidden;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pd-main-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.15s ease-out;
+            pointer-events: none;
+        }
+
+        .pd-thumbs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding: 10px 14px 12px;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .pd-thumbs::-webkit-scrollbar { display: none; }
+
+        .pd-thumb {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 2px solid transparent;
+            cursor: pointer;
+            background: #f8f9fa;
+            padding: 3px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            transition: border-color 0.15s;
+        }
+        .pd-thumb.active,
+        .pd-thumb:hover { border-color: var(--color-primary); }
+
+        /* ── Info panel ───────────────────────────────────── */
+        .pd-info {
+            padding: 16px 14px 100px;
+            background: #fff;
+            margin-top: 8px;
+        }
+
+        .pd-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .pd-category {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .pd-stock {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1.5px solid transparent;
+        }
+        .pd-stock.in-stock  { color: var(--color-primary); border-color: var(--color-primary); background: rgba(0,77,64,0.06); }
+        .pd-stock.out-of-stock { color: #e53935; border-color: #e53935; background: rgba(229,57,53,0.07); }
+        .pd-stock.coming-soon  { color: #b45309; border-color: #f59e0b; background: rgba(245,158,11,0.09); }
+
+        .pd-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--color-primary-dark);
+            line-height: 1.35;
+            margin: 0 0 10px;
+        }
+
+        .pd-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .pd-price {
+            font-size: 1.55rem;
+            font-weight: 800;
+            color: var(--color-primary);
+        }
+
+        .pd-old-price {
+            font-size: 1rem;
+            color: #999;
+            text-decoration: line-through;
+            font-weight: 500;
+        }
+
+        /* ── Variants ─────────────────────────────────────── */
+        .pd-variant-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 8px;
+        }
+
+        .pd-variant-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .pd-chip {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #475569;
+            background: #fff;
+            transition: 0.15s;
+            font-family: inherit;
+        }
+        .pd-chip:hover  { border-color: var(--color-primary); color: var(--color-primary); }
+        .pd-chip.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+        /* ── Quantity ─────────────────────────────────────── */
+        .pd-qty-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin-bottom: 16px;
+        }
+
+        .pd-qty-label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--color-primary-dark);
+        }
+
+        .pd-qty-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: #fff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 50px;
+            overflow: hidden;
+        }
+
+        .pd-qty-btn {
+            background: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: unset;
+        }
+
+        .pd-qty-val {
+            font-size: 0.95rem;
+            font-weight: 800;
+            min-width: 32px;
+            text-align: center;
+            color: var(--color-primary-dark);
+        }
+
+        /* ── Description ──────────────────────────────────── */
+        .pd-desc-section {
+            margin-top: 8px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .pd-desc-title {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--color-primary-dark);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .pd-desc-text {
+            font-size: 0.88rem;
+            color: #64748b;
+            line-height: 1.75;
+        }
+
+        /* ── Sticky bottom CTA ────────────────────────────── */
+        .pd-sticky-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 900;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        }
+
+        .pd-btn-cart {
+            flex: 1;
+            padding: 13px 10px;
+            background: #fff;
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: 0.15s;
+            font-family: inherit;
+            min-height: unset;
+        }
+        .pd-btn-cart:hover:not(:disabled) { background: var(--color-primary); color: #fff; }
+        .pd-btn-cart:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .pd-btn-buy {
+            flex: 1;
+            padding: 13px 10px;
+            background: var(--color-primary);
+            color: #fff;
+            border: 2px solid var(--color-primary);
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: 0.15s;
+            font-family: inherit;
+            min-height: unset;
+        }
+        .pd-btn-buy:hover:not(:disabled) { background: var(--color-primary-dark); border-color: var(--color-primary-dark); }
+        .pd-btn-buy:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── Reviews ──────────────────────────────────────── */
+        .pd-reviews {
+            margin-top: 8px;
+            background: #fff;
+            padding: 18px 14px 24px;
+        }
+
+        .pd-reviews-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .pd-reviews-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--color-primary-dark);
+        }
+
+        .pd-avg-rating {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 4px 12px;
+            border-radius: 50px;
+        }
+
+        .pd-avg-score {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--color-primary);
+        }
+
+        .pd-review-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .pd-reviewer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .pd-avatar {
+            width: 36px;
+            height: 36px;
+            background: rgba(0,77,64,0.12);
+            color: var(--color-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .pd-reviewer-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--color-primary-dark);
+        }
+
+        .pd-review-date {
+            font-size: 0.72rem;
+            color: #94a3b8;
+        }
+
+        .pd-stars {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 6px;
+        }
+
+        .pd-review-text {
+            font-size: 0.85rem;
+            color: #64748b;
+            line-height: 1.65;
+        }
+
+        /* ── Review form ──────────────────────────────────── */
+        .pd-review-form {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .pd-form-title {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: var(--color-primary-dark);
+            margin-bottom: 12px;
+        }
+
+        .pd-star-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .pd-star {
+            cursor: pointer;
+            color: #cbd5e1;
+            transition: color 0.15s;
+        }
+        .pd-star.active { color: #f59e0b; }
+
+        .pd-review-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            font-family: inherit;
+            font-size: 0.88rem;
+            resize: vertical;
+            min-height: 90px;
+            outline: none;
+            margin-bottom: 12px;
+            background: #fff;
+            box-sizing: border-box;
+            transition: border-color 0.15s;
+        }
+        .pd-review-textarea:focus { border-color: var(--color-primary); }
+
+        .pd-submit-btn {
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.15s;
+            min-height: unset;
+        }
+        .pd-submit-btn:hover { background: var(--color-primary-dark); }
+
+        .pd-login-prompt {
+            text-align: center;
+            padding: 16px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 12px;
+            color: #92400e;
+            font-size: 0.88rem;
+            margin-top: 12px;
+        }
+
+        /* ── Desktop overrides (768px+) ───────────────────── */
+        @media (min-width: 768px) {
+            #product-detail-container {
+                max-width: 1400px;
+                padding: 2rem 1rem;
+            }
+
+            .pd-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+                background: transparent;
+                min-height: unset;
+                align-items: start;
+            }
+
+            .pd-gallery {
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+                position: sticky;
+                top: 80px;
+            }
+
+            .pd-main-img-wrap {
+                aspect-ratio: auto;
+                max-height: none;
+                height: 420px;
+                cursor: zoom-in;
+            }
+
+            .pd-info {
+                padding: 0 0 2rem;
+                background: transparent;
+                margin-top: 0;
+            }
+
+            .pd-title { font-size: 1.8rem; margin-bottom: 12px; }
+            .pd-price { font-size: 1.9rem; }
+            .pd-sticky-cta { display: none; }
+
+            /* Inline CTA on desktop */
+            .pd-inline-cta {
+                display: flex !important;
+                gap: 12px;
+                margin-bottom: 1.5rem;
+            }
+
+            .pd-reviews {
+                grid-column: 1 / -1;
+                background: #fff;
+                border-radius: 18px;
+                padding: 2rem;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            }
+        }
+
+        /* Hide inline CTA on mobile (use sticky bar instead) */
+        .pd-inline-cta { display: none; }
+    </style>
+</head>
+<body>
+    <header class="header" id="header">
+        <div class="container header-container">
+            <div class="header-left">
+                <a href="javascript:void(0)" onclick="history.back();" class="action-btn"><i data-lucide="arrow-left"></i></a>
+                <div class="brand"><div class="brand-text">Product Details</div></div>
+            </div>
+            <div class="header-right">
+                <a href="cart.html" class="action-btn cart-container">
+                    <i data-lucide="shopping-bag"></i>
+                    <span class="badge" id="cart-badge">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main id="product-detail-container">
+        <div style="padding:2rem 1rem;">
+            <div class="loading-shimmer" style="height:340px;border-radius:16px;margin-bottom:12px;"></div>
+            <div class="loading-shimmer" style="height:24px;border-radius:8px;margin-bottom:8px;width:60%;"></div>
+            <div class="loading-shimmer" style="height:18px;border-radius:8px;margin-bottom:8px;width:40%;"></div>
+            <div class="loading-shimmer" style="height:18px;border-radius:8px;width:80%;"></div>
+        </div>
+    </main>
+
+    <div class="container" id="related-products-section" style="padding-bottom:6rem;display:none;"></div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-block footer-brand">
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img">
+                    <span class="brand-text" style="font-size:1.25rem;font-weight:800;color:var(--color-white);display:block;margin-bottom:0.5rem;">Menha Boutique</span>
+                    <p>Experience the best in self-care with our premium range of personal care and self-care solutions.</p>
+                    <div class="social-links">
+                        <a href="javascript:void(0)" class="social-link" title="Facebook"><i data-lucide="facebook"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Instagram"><i data-lucide="instagram"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Youtube"><i data-lucide="youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-block">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="categories.html">Categories</a></li>
+                        <li><a href="products.html">All Products</a></li>
+                        <li><a href="cart.html">Shopping Cart</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h3 class="footer-title">Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms &amp; Conditions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h3 class="footer-title">Contact Info</h3>
+                    <ul class="footer-links">
+                        <li style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001</li>
+                        <li style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900</li>
+                        <li style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">&copy; <span id="current-year"></span> Menha Boutique. All rights reserved.</div>
+        </div>
+    </footer>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+        let currentQty = 1;
+        let selectedVariant = null;
+        let baseProduct = null;
+
+        function updateQty(delta) {
+            currentQty = Math.max(1, currentQty + delta);
+            document.getElementById('p-qty').innerText = currentQty;
+        }
+
+        function selectVariant(index, variants) {
+            selectedVariant = variants[index];
+            document.querySelectorAll('.pd-chip').forEach((c, i) => c.classList.toggle('active', i === index));
+            const priceEl = document.getElementById('p-price');
+            let html = `₹${selectedVariant.price}`;
+            if (selectedVariant.old_price && selectedVariant.old_price > selectedVariant.price) {
+                html += ` <span class="pd-old-price">₹${selectedVariant.old_price}</span>`;
+            }
+            priceEl.innerHTML = html;
+            if (selectedVariant.image_url) {
+                const mainImg = document.getElementById('main-product-img');
+                if (mainImg) mainImg.src = selectedVariant.image_url;
+                document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
+            }
+        }
+
+        function switchMainImage(url, thumb) {
+            document.getElementById('main-product-img').src = url;
+            document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
+            if (thumb) thumb.classList.add('active');
+        }
+
+        function setRating(rating) {
+            document.querySelectorAll('.pd-star').forEach((s, i) => {
+                const ico = s.querySelector('i');
+                s.classList.toggle('active', i < rating);
+                if (i < rating) ico.setAttribute('fill', '#f59e0b');
+                else ico.removeAttribute('fill');
+            });
+            window.currentRating = rating;
+        }
+
+        async function submitReview() {
+            const comment = document.getElementById('review-comment').value;
+            const rating = window.currentRating || 0;
+            if (!rating) { alert('Please select a rating'); return; }
+            if (!comment.trim()) { alert('Please enter a comment'); return; }
+            const btn = document.querySelector('.pd-submit-btn');
+            const orig = btn.innerText;
+            btn.innerText = 'Submitting…';
+            btn.disabled = true;
+            try {
+                await MainAPI.submitReview({ product_id: baseProduct.id, rating, comment });
+                alert('Thank you for your review!');
+                window.location.reload();
+            } catch (err) {
+                alert(err.message || 'Failed to submit review');
+                btn.innerText = orig;
+                btn.disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            const container = document.getElementById('product-detail-container');
+
+            if (!id) {
+                container.innerHTML = '<div style="text-align:center;padding:4rem;"><h2>Product Not Found</h2><a href="index.html" style="color:var(--color-primary);font-weight:bold;">Go Back Home</a></div>';
+                return;
+            }
+
+            try {
+                const product = await MainAPI.fetchProductById(id);
+                if (!product || !product.id) throw new Error('Invalid product');
+
+                baseProduct = product;
+                const title = product.title || product.name || 'Product';
+                const catName = product.category_name || (product.category ? product.category.name : 'Category');
+                const img = MainAPI.getProductImage(product);
+                const desc = product.description || product.detailed_description || 'No description available.';
+
+                let stockStatus = product.status;
+                if (!stockStatus || stockStatus === 'In Stock' || stockStatus === 'Out of Stock') {
+                    stockStatus = parseInt(product.stock_quantity || 0) > 0 ? 'In Stock' : 'Out of Stock';
+                }
+                const stockClass = stockStatus === 'In Stock' ? 'in-stock' : (stockStatus === 'Coming Soon' ? 'coming-soon' : 'out-of-stock');
+                const canBuy = stockStatus === 'In Stock';
+
+                const variants = product.product_attributes || [];
+                selectedVariant = variants.length ? variants[0] : {
+                    price: MainAPI.getProductPrice(product),
+                    old_price: product.old_price,
+                    attribute_value: product.weight || product.unit || '1 pc'
+                };
+
+                // Variants HTML
+                let variantHtml = '';
+                if (variants.length > 1) {
+                    const vData = JSON.stringify(variants).replace(/"/g, '&quot;');
+                    variantHtml = `
+                        <div class="pd-variant-label">Available Options</div>
+                        <div class="pd-variant-chips">
+                            ${variants.map((v, i) => `<button class="pd-chip${i === 0 ? ' active' : ''}" onclick="selectVariant(${i}, ${vData})">${v.attribute_value}</button>`).join('')}
+                        </div>`;
+                }
+
+                // Thumbnails HTML
+                const allImages = [img];
+                if (product.additional_images) {
+                    product.additional_images.forEach(a => { if (a.image_url && a.image_url !== img) allImages.push(a.image_url); });
+                }
+                variants.forEach(v => { if (v.image_url && !allImages.includes(v.image_url)) allImages.push(v.image_url); });
+
+                const thumbsHtml = allImages.length > 1
+                    ? `<div class="pd-thumbs">${allImages.map((u, i) => `<img src="${u}" class="pd-thumb${i === 0 ? ' active' : ''}" onclick="switchMainImage('${u}', this)" loading="lazy" alt="View ${i+1}">`).join('')}</div>`
+                    : '';
+
+                // Price HTML
+                const priceHtml = selectedVariant.old_price && selectedVariant.old_price > selectedVariant.price
+                    ? `₹${selectedVariant.price} <span class="pd-old-price">₹${selectedVariant.old_price}</span>`
+                    : `₹${selectedVariant.price}`;
+
+                // Reviews HTML
+                const reviews = product.reviews || [];
+                const avgRating = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : 0;
+
+                const starsHtml = (n, size) => [1,2,3,4,5].map(s =>
+                    `<i data-lucide="star" style="width:${size}px;height:${size}px;${s <= Math.round(n) ? 'fill:#f59e0b;color:#f59e0b;' : 'color:#e2e8f0;'}"></i>`
+                ).join('');
+
+                let reviewCardsHtml = reviews.length === 0
+                    ? `<p style="text-align:center;padding:1.5rem 0;color:#94a3b8;font-size:0.88rem;">No reviews yet. Be the first to review!</p>`
+                    : reviews.map(r => `
+                        <div class="pd-review-card">
+                            <div class="pd-reviewer">
+                                <div class="pd-avatar">${r.users ? r.users.first_name[0].toUpperCase() : 'U'}</div>
+                                <div>
+                                    <div class="pd-reviewer-name">${r.users ? r.users.first_name + ' ' + r.users.last_name : 'Valued Customer'}</div>
+                                    <div class="pd-review-date">${new Date(r.created_at).toLocaleDateString('en-IN')}</div>
+                                </div>
+                            </div>
+                            <div class="pd-stars">${starsHtml(r.rating, 13)}</div>
+                            <div class="pd-review-text">${r.comment}</div>
+                        </div>`).join('');
+
+                const user = MainAPI.getUser();
+                const reviewFormHtml = user
+                    ? `<div class="pd-review-form">
+                            <div class="pd-form-title">Write a Review</div>
+                            <div style="font-size:0.78rem;font-weight:600;color:#64748b;margin-bottom:8px;">YOUR RATING</div>
+                            <div class="pd-star-row">
+                                ${[1,2,3,4,5].map(s => `<span class="pd-star" onclick="setRating(${s})"><i data-lucide="star" style="width:28px;height:28px;"></i></span>`).join('')}
+                            </div>
+                            <div style="font-size:0.78rem;font-weight:600;color:#64748b;margin-bottom:6px;">YOUR COMMENT</div>
+                            <textarea id="review-comment" class="pd-review-textarea" placeholder="Share your experience…"></textarea>
+                            <button class="pd-submit-btn" onclick="submitReview()">Submit Review</button>
+                       </div>`
+                    : `<div class="pd-login-prompt">Please <a href="login.html" style="font-weight:800;text-decoration:underline;color:inherit;">login</a> to write a review.</div>`;
+
+                // Inline CTA (desktop only)
+                const inlineCta = `
+                    <div class="pd-inline-cta">
+                        <button class="pd-btn-cart" id="add-to-cart-action" style="flex:1;" ${canBuy ? '' : 'disabled'}>
+                            <i data-lucide="shopping-cart" style="width:18px;height:18px;"></i>
+                            ${canBuy ? 'Add to Cart' : (stockStatus === 'Coming Soon' ? 'Coming Soon' : 'Out of Stock')}
+                        </button>
+                        <button class="pd-btn-buy" id="buy-now-action" style="flex:1;" ${canBuy ? '' : 'disabled'}>
+                            <i data-lucide="zap" style="width:18px;height:18px;"></i> Buy Now
+                        </button>
+                    </div>`;
+
+                container.innerHTML = `
+                    <div class="pd-layout">
+                        <div class="pd-gallery">
+                            <div class="pd-main-img-wrap" id="zoom-container">
+                                <img src="${img}" alt="${title}" id="main-product-img">
+                            </div>
+                            ${thumbsHtml}
+                        </div>
+
+                        <div class="pd-info">
+                            <div class="pd-meta-row">
+                                <span class="pd-category">${catName}</span>
+                                <span class="pd-stock ${stockClass}">${stockStatus}</span>
+                            </div>
+                            <h1 class="pd-title">${title}</h1>
+                            <div class="pd-price-row">
+                                <span class="pd-price" id="p-price">${priceHtml}</span>
+                            </div>
+                            ${variantHtml}
+                            <div class="pd-qty-section">
+                                <span class="pd-qty-label">Quantity</span>
+                                <div class="pd-qty-ctrl">
+                                    <button class="pd-qty-btn" onclick="updateQty(-1)">−</button>
+                                    <span class="pd-qty-val" id="p-qty">1</span>
+                                    <button class="pd-qty-btn" onclick="updateQty(1)">+</button>
+                                </div>
+                            </div>
+                            ${inlineCta}
+                            <div class="pd-desc-section">
+                                <div class="pd-desc-title">Description</div>
+                                <div class="pd-desc-text">${desc.replace(/\n/g, '<br>')}</div>
+                            </div>
+                        </div>
+
+                        <div class="pd-reviews">
+                            <div class="pd-reviews-header">
+                                <span class="pd-reviews-title">Customer Reviews (${reviews.length})</span>
+                                ${reviews.length ? `<div class="pd-avg-rating"><span class="pd-avg-score">${avgRating}</span><div class="pd-stars">${starsHtml(avgRating, 13)}</div></div>` : ''}
+                            </div>
+                            ${reviewCardsHtml}
+                            ${reviewFormHtml}
+                        </div>
+                    </div>
+
+                    <!-- Sticky CTA bar (mobile only) -->
+                    <div class="pd-sticky-cta">
+                        <button class="pd-btn-cart" id="add-to-cart-action-mob" ${canBuy ? '' : 'disabled'}>
+                            <i data-lucide="shopping-cart" style="width:18px;height:18px;"></i>
+                            ${canBuy ? 'Add to Cart' : 'Out of Stock'}
+                        </button>
+                        <button class="pd-btn-buy" id="buy-now-action-mob" ${canBuy ? '' : 'disabled'}>
+                            <i data-lucide="zap" style="width:18px;height:18px;"></i> Buy Now
+                        </button>
+                    </div>
+                `;
+
+                // Desktop zoom
+                const zoomContainer = document.getElementById('zoom-container');
+                const mainImg = document.getElementById('main-product-img');
+                zoomContainer.addEventListener('mousemove', e => {
+                    if (window.innerWidth < 768) return;
+                    const r = zoomContainer.getBoundingClientRect();
+                    mainImg.style.transformOrigin = `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`;
+                    mainImg.style.transform = 'scale(2.5)';
+                });
+                zoomContainer.addEventListener('mouseleave', () => { mainImg.style.transform = 'scale(1)'; });
+
+                // Shared cart/buy logic
+                function buildCartItem() {
+                    const qty = parseInt(document.getElementById('p-qty').innerText) || 1;
+                    const item = { ...baseProduct, price: selectedVariant.price, selected_variant: selectedVariant.attribute_value, variant_id: selectedVariant.id };
+                    delete item.new_price;
+                    return { item, qty };
+                }
+
+                function handleAddToCart(btn) {
+                    const { item, qty } = buildCartItem();
+                    CartManager.add(item, qty);
+                    const orig = btn.innerHTML;
+                    btn.innerHTML = '<i data-lucide="check" style="width:18px;height:18px;"></i> Added ₹' + (selectedVariant.price * qty);
+                    btn.style.background = '#16a34a';
+                    btn.style.borderColor = '#16a34a';
+                    btn.style.color = '#fff';
+                    lucide.createIcons();
+                    setTimeout(() => {
+                        btn.innerHTML = orig;
+                        btn.style.background = '';
+                        btn.style.borderColor = '';
+                        btn.style.color = '';
+                        lucide.createIcons();
+                    }, 1800);
+                }
+
+                function handleBuyNow() {
+                    const { item, qty } = buildCartItem();
+                    CartManager.add(item, qty);
+                    window.location.href = 'checkout.html';
+                }
+
+                // Wire up both desktop + mobile buttons
+                ['add-to-cart-action', 'add-to-cart-action-mob'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('click', function() { handleAddToCart(this); });
+                });
+                ['buy-now-action', 'buy-now-action-mob'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('click', handleBuyNow);
+                });
+
+                lucide.createIcons();
+                loadRelatedProducts(product.category_id, product.id);
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div style="text-align:center;padding:4rem;"><h2>Error Loading Product</h2><a href="index.html" style="color:var(--color-primary);font-weight:bold;">Go Back Home</a></div>';
+            }
+        });
+
+        async function loadRelatedProducts(categoryId, currentProductId) {
+            const section = document.getElementById('related-products-section');
+            try {
+                const [catProds, allProds] = await Promise.all([
+                    categoryId ? MainAPI.fetchProductsByCategory(categoryId) : Promise.resolve([]),
+                    MainAPI.fetchProducts()
+                ]);
+                const related = (catProds || []).filter(p => p.id !== currentProductId).slice(0, 4);
+                const others  = (allProds  || []).filter(p => p.id !== currentProductId && !related.find(r => r.id === p.id)).slice(0, 4);
+                let html = '';
+                if (related.length) html += `<div class="section-header" style="margin-bottom:1.25rem;"><h2 class="section-title">More from this Category</h2><a href="categories.html?id=${categoryId}" class="view-all-btn">View All</a></div><div class="product-grid" style="margin-bottom:2.5rem;">${related.map(p => window.productCardHtml(p)).join('')}</div>`;
+                if (others.length)  html += `<div class="section-header" style="margin-bottom:1.25rem;"><h2 class="section-title">You Might Also Like</h2><a href="products.html" class="view-all-btn">View All</a></div><div class="product-grid">${others.map(p => window.productCardHtml(p)).join('')}</div>`;
+                if (html) { section.innerHTML = html; section.style.display = 'block'; lucide.createIcons(); }
+            } catch (e) { console.error('Related products error:', e); }
+        }
+    </script>
+</body>
+</html>

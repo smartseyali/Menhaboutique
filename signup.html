@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menha Boutique - Sign Up</title>
+    <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@0.407.0/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        body { background: #f0f4f3; min-height: 100vh; }
+
+        .signup-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .signup-topbar {
+            background: var(--color-white);
+            border-bottom: 1px solid var(--color-border);
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            gap: 0.75rem;
+        }
+
+
+        .signup-topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .signup-topbar-brand img {
+            height: 36px;
+            width: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .signup-topbar-brand span {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--color-primary);
+        }
+
+        .signup-back-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--color-text-light);
+            font-size: 0.88rem;
+            font-weight: 600;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .signup-back-btn:hover {
+            background: var(--color-light-gray);
+            color: var(--color-primary);
+        }
+
+        .signup-body {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 2.5rem 1rem 4rem;
+        }
+
+        .signup-card {
+            background: var(--color-white);
+            border-radius: 24px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+            width: 100%;
+            max-width: 900px;
+            overflow: hidden;
+        }
+
+        .signup-card-hero {
+            background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+            padding: 2.5rem 2.5rem 2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .signup-hero-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .signup-card-hero h1 {
+            font-size: 1.7rem;
+            font-weight: 800;
+            margin: 0 0 4px;
+            letter-spacing: -0.3px;
+        }
+
+        .signup-card-hero p {
+            margin: 0;
+            opacity: 0.78;
+            font-size: 0.92rem;
+        }
+
+        .signup-form-body {
+            padding: 2.5rem;
+        }
+
+        .signup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .signup-section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--color-primary);
+            background: rgba(0,77,64,0.07);
+            padding: 5px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: #9ca3af;
+            pointer-events: none;
+            flex-shrink: 0;
+        }
+
+        .input-wrap input,
+        .input-wrap select {
+            width: 100%;
+            padding: 11px 14px 11px 40px;
+            border-radius: 10px;
+            border: 1.5px solid var(--color-border);
+            font-family: inherit;
+            font-size: 0.92rem;
+            color: var(--color-text);
+            background: #fafafa;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        .input-wrap input:focus,
+        .input-wrap select:focus {
+            border-color: var(--color-primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0,77,64,0.08);
+        }
+
+        .input-wrap input::placeholder { color: #c4cad3; }
+
+        .input-wrap input.error,
+        .input-wrap select.error {
+            border-color: #ef4444;
+        }
+
+        .input-wrap select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Password toggle */
+        .input-wrap .pw-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9ca3af;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrap .pw-toggle:hover { color: var(--color-primary); }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .signup-divider {
+            height: 1px;
+            background: var(--color-border);
+            margin: 0.5rem 0 2rem;
+        }
+
+        .signup-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .signup-error {
+            display: none;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 0.86rem;
+            font-weight: 500;
+            width: 100%;
+            text-align: center;
+        }
+
+        .signup-submit-btn {
+            width: 100%;
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(0,77,64,0.28);
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+
+        .signup-submit-btn:hover:not(:disabled) {
+            background: var(--color-primary-dark);
+            box-shadow: 0 6px 20px rgba(0,77,64,0.35);
+        }
+
+        .signup-submit-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .signup-login-link {
+            font-size: 0.88rem;
+            color: var(--color-text-light);
+        }
+
+        .signup-login-link a {
+            color: var(--color-primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .signup-login-link a:hover { text-decoration: underline; }
+
+        @media (max-width: 700px) {
+            .signup-body { padding: 1rem 0.5rem 3rem; }
+            .signup-card { border-radius: 18px; }
+            .signup-card-hero { padding: 1.75rem 1.25rem 1.5rem; gap: 1rem; }
+            .signup-card-hero h1 { font-size: 1.35rem; }
+            .signup-hero-icon { width: 48px; height: 48px; border-radius: 12px; }
+            .signup-form-body { padding: 1.5rem 1.25rem; }
+            .signup-grid { grid-template-columns: 1fr; gap: 0; }
+            .form-row { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 380px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="signup-page">
+
+    <!-- Top bar -->
+    <div class="signup-topbar">
+        <a href="javascript:history.back();" class="signup-back-btn" aria-label="Go back">
+            <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
+        </a>
+        <a href="index.html" class="signup-topbar-brand">
+            <img src="assets/images/logo.jpg" alt="Menha Boutique">
+            <span>Menha Boutique</span>
+        </a>
+    </div>
+
+    <!-- Main -->
+    <div class="signup-body">
+        <div class="signup-card">
+
+            <!-- Hero strip -->
+            <div class="signup-card-hero">
+                <div class="signup-hero-icon">
+                    <i data-lucide="user-plus" style="width:28px;height:28px;color:#fff;"></i>
+                </div>
+                <div>
+                    <h1>Create your account</h1>
+                    <p>Join Menha Boutique — it only takes a minute</p>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <div class="signup-form-body">
+                <form id="signup-form" autocomplete="on">
+
+                    <div class="signup-grid">
+
+                        <!-- Left: Account details -->
+                        <div>
+                            <div class="signup-section-title">Account Details</div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="signup-fname">First Name <span style="color:#ef4444;">*</span></label>
+                                    <div class="input-wrap">
+                                        <i data-lucide="user" class="input-icon"></i>
+                                        <input type="text" id="signup-fname" placeholder="First name" required autocomplete="given-name">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="signup-lname">Last Name</label>
+                                    <div class="input-wrap">
+                                        <i data-lucide="user" class="input-icon"></i>
+                                        <input type="text" id="signup-lname" placeholder="Last name" autocomplete="family-name">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="signup-email">Email Address <span style="color:#ef4444;">*</span></label>
+                                <div class="input-wrap">
+                                    <i data-lucide="mail" class="input-icon"></i>
+                                    <input type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="signup-phone">Mobile Number <span style="color:#ef4444;">*</span></label>
+                                <div class="input-wrap">
+                                    <i data-lucide="smartphone" class="input-icon"></i>
+                                    <input type="tel" id="signup-phone" placeholder="10-digit mobile number" required autocomplete="tel">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="signup-password">Password <span style="color:#ef4444;">*</span></label>
+                                <div class="input-wrap">
+                                    <i data-lucide="lock" class="input-icon"></i>
+                                    <input type="password" id="signup-password" placeholder="Min. 6 characters" required minlength="6" autocomplete="new-password" style="padding-right:40px;">
+                                    <button type="button" class="pw-toggle" id="pw-toggle-btn" aria-label="Show password">
+                                        <i data-lucide="eye" style="width:16px;height:16px;" id="pw-toggle-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Address details -->
+                        <div>
+                            <div class="signup-section-title">Delivery Address</div>
+
+                            <div class="form-group">
+                                <label for="signup-country">Country <span style="color:#ef4444;">*</span></label>
+                                <div class="input-wrap">
+                                    <i data-lucide="globe" class="input-icon"></i>
+                                    <select id="signup-country" required autocomplete="country">
+                                        <option value="">Select Country</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="signup-state">State <span style="color:#ef4444;">*</span></label>
+                                    <div class="input-wrap">
+                                        <i data-lucide="map" class="input-icon"></i>
+                                        <select id="signup-state" required disabled autocomplete="address-level1">
+                                            <option value="">Select State</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="signup-city">City <span style="color:#ef4444;">*</span></label>
+                                    <div class="input-wrap">
+                                        <i data-lucide="map-pin" class="input-icon"></i>
+                                        <select id="signup-city" required disabled autocomplete="address-level2">
+                                            <option value="">Select City</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="signup-postcode">Postal / PIN Code <span style="color:#ef4444;">*</span></label>
+                                <div class="input-wrap">
+                                    <i data-lucide="hash" class="input-icon"></i>
+                                    <input type="text" id="signup-postcode" placeholder="e.g. 400001" required autocomplete="postal-code">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="signup-address">Address Line 1 <span style="color:#ef4444;">*</span></label>
+                                <div class="input-wrap">
+                                    <i data-lucide="home" class="input-icon"></i>
+                                    <input type="text" id="signup-address" placeholder="House / Flat No., Street" required autocomplete="address-line1">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="signup-address2">Address Line 2 <span style="color:#6b7280;font-weight:400;">(Optional)</span></label>
+                                <div class="input-wrap">
+                                    <i data-lucide="building" class="input-icon"></i>
+                                    <input type="text" id="signup-address2" placeholder="Landmark, Area, Colony" autocomplete="address-line2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="signup-divider"></div>
+
+                    <div class="signup-actions">
+                        <div class="signup-error" id="signup-error"></div>
+
+                        <button type="submit" id="signup-submit" class="signup-submit-btn">
+                            <i data-lucide="user-check" style="width:18px;height:18px;"></i>
+                            Create Account
+                        </button>
+
+                        <p class="signup-login-link">
+                            Already have an account? <a href="login.html">Sign in</a>
+                        </p>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+        document.getElementById('current-year') && (document.getElementById('current-year').textContent = new Date().getFullYear());
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+
+            if (MainAPI.isAuthenticated()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Password show/hide
+            const pwInput = document.getElementById('signup-password');
+            const pwIcon = document.getElementById('pw-toggle-icon');
+            document.getElementById('pw-toggle-btn').addEventListener('click', () => {
+                const show = pwInput.type === 'password';
+                pwInput.type = show ? 'text' : 'password';
+                pwIcon.setAttribute('data-lucide', show ? 'eye-off' : 'eye');
+                lucide.createIcons();
+            });
+
+            // Location dropdowns
+            const countrySelect = document.getElementById('signup-country');
+            const stateSelect = document.getElementById('signup-state');
+            const citySelect = document.getElementById('signup-city');
+
+            const countries = await MainAPI.getCountries();
+            countries.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                countrySelect.appendChild(opt);
+            });
+
+            countrySelect.addEventListener('change', async (e) => {
+                stateSelect.innerHTML = '<option value="">Select State</option>';
+                citySelect.innerHTML = '<option value="">Select City</option>';
+                stateSelect.disabled = citySelect.disabled = true;
+                if (e.target.value) {
+                    const states = await MainAPI.getStates(e.target.value);
+                    states.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id; opt.textContent = s.name;
+                        stateSelect.appendChild(opt);
+                    });
+                    stateSelect.disabled = false;
+                }
+            });
+
+            stateSelect.addEventListener('change', async (e) => {
+                citySelect.innerHTML = '<option value="">Select City</option>';
+                citySelect.disabled = true;
+                if (e.target.value) {
+                    const cities = await MainAPI.getCities(e.target.value);
+                    cities.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id; opt.textContent = c.name;
+                        citySelect.appendChild(opt);
+                    });
+                    citySelect.disabled = false;
+                }
+            });
+
+            // Form submit
+            const form = document.getElementById('signup-form');
+            const errorDiv = document.getElementById('signup-error');
+            const submitBtn = document.getElementById('signup-submit');
+
+            function showError(msg) {
+                errorDiv.innerText = msg;
+                errorDiv.style.display = 'block';
+                errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            function normalisePhone(raw) {
+                let p = raw.replace(/\s/g, '');
+                if (p.startsWith('+91')) p = p.slice(3);
+                else if (p.startsWith('91') && p.length === 12) p = p.slice(2);
+                else if (p.startsWith('0')) p = p.slice(1);
+                return p;
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorDiv.style.display = 'none';
+
+                const fname = document.getElementById('signup-fname').value.trim();
+                const email = document.getElementById('signup-email').value.trim();
+                const rawPhone = document.getElementById('signup-phone').value.trim();
+                const password = document.getElementById('signup-password').value;
+                const phone = normalisePhone(rawPhone);
+
+                if (fname.length < 2) return showError('First name must be at least 2 characters.');
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Please enter a valid email address.');
+                if (!/^\d{10}$/.test(phone)) return showError('Please enter a valid 10-digit mobile number (without country code).');
+                if (password.length < 6) return showError('Password must be at least 6 characters.');
+
+                const countryText = countrySelect.options[countrySelect.selectedIndex]?.text || '';
+                const stateText = stateSelect.options[stateSelect.selectedIndex]?.text || '';
+                const cityText = citySelect.options[citySelect.selectedIndex]?.text || '';
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i data-lucide="loader" style="width:18px;height:18px;animation:spin 1s linear infinite;"></i> Creating account...';
+                lucide.createIcons();
+
+                const userData = {
+                    firstName: fname,
+                    lastName: document.getElementById('signup-lname').value.trim(),
+                    email,
+                    phoneNumber: phone,
+                    password,
+                    address: {
+                        line1: document.getElementById('signup-address').value.trim(),
+                        line2: document.getElementById('signup-address2').value.trim(),
+                        postalCode: document.getElementById('signup-postcode').value.trim(),
+                        country: countryText,
+                        state: stateText,
+                        city: cityText
+                    }
+                };
+
+                try {
+                    const response = await MainAPI.register(userData);
+                    if (response.token) {
+                        MainAPI.setAuthToken(response.token, response.user);
+                        window.location.href = 'index.html';
+                    } else {
+                        throw new Error('No token received');
+                    }
+                } catch (error) {
+                    showError(error.message || 'Registration failed. Please try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i data-lucide="user-check" style="width:18px;height:18px;"></i> Create Account';
+                    lucide.createIcons();
+                }
+            });
+        });
+    </script>
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</body>
+</html>

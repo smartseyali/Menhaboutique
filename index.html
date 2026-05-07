@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menha Boutique - Shopping</title>
+    <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@0.407.0/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="container header-container">
+            <div class="header-left">
+                <a href="index.html" class="brand" style="display: flex; align-items: center; gap: 8px;">
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img" style="height: 40px; width: auto;">
+                    <span class="brand-text" style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary); white-space: nowrap;">Menha Boutique</span>
+                </a>
+            </div>
+
+            <div class="header-right">
+                <a href="categories.html" class="action-btn tooltip desktop-only" title="Categories"><i data-lucide="grid"></i></a>
+                <a href="login.html" class="action-btn tooltip desktop-only" title="Profile"><i data-lucide="user"></i></a>
+                <div class="cart-container">
+                    <a href="cart.html" class="action-btn" id="cart-btn">
+                        <i data-lucide="shopping-bag"></i>
+                        <span class="badge" id="cart-badge">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+
+        <!-- Banners Section -->
+        <section class="banner-section">
+            <div class="container">
+                <div class="banner-wrapper">
+                    <div class="banner-carousel" id="banner-container">
+                        <!-- Banners will be injected here -->
+                        <div class="loading-shimmer" style="height: 100%; width: 100%;"></div>
+                    </div>
+                    <div class="carousel-indicators" id="banner-indicators"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="category-section section-padding">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Categories</h2>
+                    <a href="categories.html" class="view-all-btn">View All</a>
+                </div>
+                <div class="category-scroll" id="category-container">
+                    <!-- Categories will be injected here -->
+                    <div class="loading-shimmer"
+                        style="width: 80px; height: 80px; border-radius: 50%; display: inline-block; margin-right: 15px;">
+                    </div>
+                    <div class="loading-shimmer"
+                        style="width: 80px; height: 80px; border-radius: 50%; display: inline-block; margin-right: 15px;">
+                    </div>
+                    <div class="loading-shimmer"
+                        style="width: 80px; height: 80px; border-radius: 50%; display: inline-block; margin-right: 15px;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trending Products Section -->
+        <section class="products-section section-padding">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">All Items</h2>
+                    <a href="products.html" class="view-all-btn">View All</a>
+                </div>
+                <div class="product-grid" id="product-container">
+                    <!-- Products will be injected here -->
+                    <div class="loading-shimmer" style="height: 250px; border-radius: 18px;"></div>
+                    <div class="loading-shimmer" style="height: 250px; border-radius: 18px;"></div>
+                    <div class="loading-shimmer" style="height: 250px; border-radius: 18px;"></div>
+                    <div class="loading-shimmer" style="height: 250px; border-radius: 18px;"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-block footer-brand">
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img">
+                    <span class="brand-text" style="font-size: 1.25rem; font-weight: 800; color: var(--color-white); display: block; margin-bottom: 0.5rem;">Menha Boutique</span>
+                    <p>Experience the best in self-care with our premium range of personal care and self-care solutions.
+                        We are committed to providing high-quality offerings designed to support daily wellness,
+                        hygiene, and overall well-being.</p>
+                    <div class="social-links">
+                        <a href="javascript:void(0)" class="social-link" title="Facebook"><i
+                                data-lucide="facebook"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Instagram"><i
+                                data-lucide="instagram"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Youtube"><i
+                                data-lucide="youtube"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="categories.html">Categories</a></li>
+                        <li><a href="index.html">Products</a></li>
+                        <li><a href="cart.html">Shopping Cart</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Contact Info</h3>
+                    <ul class="footer-links">
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001
+                        </li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900
+                        </li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                &copy; <span id="current-year"></span> Menha Boutique. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+
+    <!-- Scripts -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+
+</html>

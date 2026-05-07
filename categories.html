@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menha Boutique - Categories</title>
+    <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@0.407.0/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .page-header {
+            background: var(--color-white);
+            padding: 2rem 0;
+            text-align: center;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: var(--color-primary-dark);
+            font-weight: 800;
+        }
+
+        .grid-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .grid-category-item {
+            background: var(--color-white);
+            border-radius: 16px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-normal);
+            cursor: pointer;
+        }
+
+        .grid-category-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .grid-category-item img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 0.75rem;
+            border: 3px solid var(--color-light-gray);
+            display: block;
+        }
+
+        .grid-category-item h3 {
+            font-size: 1rem;
+            color: var(--color-text);
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        @media (max-width: 768px) {
+            .grid-categories {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.75rem;
+            }
+            .grid-category-item {
+                padding: 1rem 0.5rem;
+                border-radius: 12px;
+            }
+            .grid-category-item img {
+                width: 56px;
+                height: 56px;
+                margin-bottom: 0.5rem;
+            }
+            .grid-category-item h3 {
+                font-size: 0.78rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .grid-categories {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header" id="header">
+        <div class="container header-container">
+            <div class="header-left">
+                <a href="javascript:void(0)" onclick="history.back();"
+                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: #f8fafc; color: #64748b; transition: 0.3s; border: 1px solid #e2e8f0;"
+                    onmouseover="this.style.background='#f1f5f9'; this.style.color='var(--color-primary)'"
+                    onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b'">
+                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+                </a>
+                <a href="index.html" class="brand" style="display: flex; align-items: center; gap: 8px;">
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img"
+                        style="height: 40px; width: auto;">
+                    <span class="brand-text"
+                        style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary); white-space: nowrap;">Menha
+                        Boutique</span>
+                </a>
+            </div>
+            <div class="header-right">
+                <a href="cart.html" class="action-btn cart-container">
+                    <i data-lucide="shopping-bag"></i>
+                    <span class="badge" id="cart-badge">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-header">
+        <div class="container">
+            <h1 class="page-title" id="category-page-title">Shop by Category</h1>
+            <p id="category-page-subtitle" style="color: var(--color-text-light); margin-top: 0.5rem; display: none;">
+                Showing products for selected category</p>
+            <button id="back-to-categories" onclick="showAllCategories()"
+                style="display: none; margin: 1rem auto 0; background: var(--color-primary); color: white; border: none; padding: 8px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; align-items: center; gap: 8px;">
+                <i data-lucide="arrow-left" style="width: 16px;"></i> Back to Categories
+            </button>
+        </div>
+    </div>
+
+    <main class="main-content container section-padding" style="min-height: 50vh;">
+        <div class="grid-categories" id="main-content-container">
+            <!-- Loader -->
+            <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
+            <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
+            <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
+            <div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-block footer-brand">
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img">
+                    <span class="brand-text"
+                        style="font-size: 1.25rem; font-weight: 800; color: var(--color-white); display: block; margin-bottom: 0.5rem;">Menha
+                        Boutique</span>
+                    <p>Experience the best in self-care with our premium range of personal care and self-care solutions.
+                        We are committed to providing high-quality offerings designed to support daily wellness,
+                        hygiene, and overall well-being.</p>
+                    <div class="social-links">
+                        <a href="javascript:void(0)" class="social-link" title="Facebook"><i
+                                data-lucide="facebook"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Instagram"><i
+                                data-lucide="instagram"></i></a>
+                        <a href="javascript:void(0)" class="social-link" title="Youtube"><i
+                                data-lucide="youtube"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="categories.html">Categories</a></li>
+                        <li><a href="index.html">Products</a></li>
+                        <li><a href="cart.html">Shopping Cart</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-block">
+                    <h3 class="footer-title">Contact Info</h3>
+                    <ul class="footer-links">
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001
+                        </li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900
+                        </li>
+                        <li
+                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                &copy; <span id="current-year"></span> Menha Boutique. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+        let allCategories = [];
+        let currentCategoryProducts = [];
+        const mainContainer = document.getElementById('main-content-container');
+        const pageTitle = document.getElementById('category-page-title');
+        const pageSubtitle = document.getElementById('category-page-subtitle');
+        const backBtn = document.getElementById('back-to-categories');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+
+            // Check for category ID in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryId = urlParams.get('id');
+
+            if (categoryId) {
+                // Fetch category name first or just load products
+                allCategories = await MainAPI.fetchCategories();
+                const cat = allCategories.find(c => c.id === categoryId);
+                if (cat) {
+                    await selectCategory(cat.id, cat.name);
+                } else {
+                    await showAllCategories();
+                }
+            } else {
+                await showAllCategories();
+            }
+        });
+
+        function filterProductSearch(query) {
+            const q = query.toLowerCase().trim();
+            const filtered = q ? currentCategoryProducts.filter(p =>
+                (p.title || '').toLowerCase().includes(q) ||
+                (p.sku || '').toLowerCase().includes(q) ||
+                (p.description || '').toLowerCase().includes(q)
+            ) : currentCategoryProducts;
+            renderProductGrid(filtered);
+        }
+
+        async function showAllCategories() {
+            mainContainer.innerHTML = '<div class="loading-shimmer" style="height: 180px; border-radius: 16px;"></div>'.repeat(4);
+            pageTitle.innerText = 'Shop by Category';
+            pageSubtitle.style.display = 'none';
+            backBtn.style.display = 'none';
+            mainContainer.className = 'grid-categories';
+
+            const existingSearch = document.getElementById('product-search-bar');
+            if (existingSearch) existingSearch.style.display = 'none';
+
+            allCategories = await MainAPI.fetchCategories();
+
+            if (allCategories && allCategories.length > 0) {
+                let html = '';
+                allCategories.forEach(cat => {
+                    const img = cat.image || 'https://via.placeholder.com/100';
+                    const name = cat.name || 'Category';
+                    html += `
+                        <div class="grid-category-item" onclick="selectCategory('${cat.id}', '${name}')">
+                            <img src="${img}" alt="${name}">
+                            <h3>${name}</h3>
+                        </div>
+                    `;
+                });
+                mainContainer.innerHTML = html;
+            } else {
+                mainContainer.innerHTML = '<p>No categories found.</p>';
+            }
+            lucide.createIcons();
+        }
+
+        function renderProductGrid(products) {
+            if (products && products.length > 0) {
+                mainContainer.innerHTML = products.map(p => window.productCardHtml(p)).join('');
+            } else {
+                mainContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;"><p style="color: #64748b;">No products found in this category.</p></div>';
+            }
+            lucide.createIcons();
+        }
+
+        async function selectCategory(categoryId, categoryName) {
+            mainContainer.innerHTML = Array.from({ length: 8 }).map(() => `
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-img"></div>
+                    <div class="skeleton-body">
+                        <div class="skeleton skeleton-line lg w-80"></div>
+                        <div class="skeleton skeleton-line w-40"></div>
+                        <div class="skeleton skeleton-line w-60"></div>
+                    </div>
+                </div>
+            `).join('');
+            pageTitle.innerText = categoryName;
+            pageSubtitle.style.display = 'block';
+            backBtn.style.display = 'flex';
+
+            // Add search bar
+            let searchBar = document.getElementById('product-search-bar');
+            if (!searchBar) {
+                searchBar = document.createElement('div');
+                searchBar.id = 'product-search-bar';
+                searchBar.style.cssText = 'width:100%;max-width:480px;margin:0.75rem auto 0;';
+                searchBar.innerHTML = `<div style="position:relative;"><input id="product-search-input" type="text" placeholder="Search products..." style="width:100%;padding:10px 16px 10px 40px;border-radius:50px;border:2px solid var(--color-border);font-family:inherit;font-size:0.92rem;outline:none;transition:0.2s;" oninput="filterProductSearch(this.value)" onfocus="this.style.borderColor='var(--color-primary)'" onblur="this.style.borderColor='var(--color-border)'"><i data-lucide="search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--color-text-light);pointer-events:none;"></i></div>`;
+                const pageHeader = document.querySelector('.page-header .container');
+                pageHeader.appendChild(searchBar);
+                lucide.createIcons();
+            } else {
+                searchBar.style.display = 'block';
+                document.getElementById('product-search-input').value = '';
+            }
+
+            mainContainer.className = 'product-grid';
+
+            const products = await MainAPI.fetchProductsByCategory(categoryId);
+            currentCategoryProducts = products || [];
+            renderProductGrid(currentCategoryProducts);
+        }
+    </script>
+</body>
+
+</html>
