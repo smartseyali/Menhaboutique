@@ -20,7 +20,6 @@
             display: flex;
             flex-direction: column;
             background: #f4f6f8;
-            min-height: 100vh;
         }
 
         /* ── Image gallery ────────────────────────────────── */
@@ -38,6 +37,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: pan-y;
         }
 
         .pd-main-img-wrap img {
@@ -46,6 +46,7 @@
             object-fit: contain;
             transition: transform 0.15s ease-out;
             pointer-events: none;
+            display: block;
         }
 
         .pd-thumbs {
@@ -482,8 +483,6 @@
                 border-radius: 18px;
                 overflow: hidden;
                 box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-                position: sticky;
-                top: 80px;
             }
 
             .pd-main-img-wrap {
@@ -558,9 +557,9 @@
                     <span class="brand-text" style="font-size:1.25rem;font-weight:800;color:var(--color-white);display:block;margin-bottom:0.5rem;">Menha Boutique</span>
                     <p>Experience the best in self-care with our premium range of personal care and self-care solutions.</p>
                     <div class="social-links">
-                        <a href="javascript:void(0)" class="social-link" title="Facebook"><i data-lucide="facebook"></i></a>
-                        <a href="javascript:void(0)" class="social-link" title="Instagram"><i data-lucide="instagram"></i></a>
-                        <a href="javascript:void(0)" class="social-link" title="Youtube"><i data-lucide="youtube"></i></a>
+                        <a href="https://www.facebook.com/share/1Cc8K6GPUV/" target="_blank" rel="noopener noreferrer" class="social-link" title="Facebook"><i data-lucide="facebook"></i></a>
+                        <a href="https://www.instagram.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram"><i data-lucide="instagram"></i></a>
+                        <a href="https://www.youtube.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Youtube"><i data-lucide="youtube"></i></a>
                     </div>
                 </div>
                 <div class="footer-block">
@@ -583,9 +582,8 @@
                 <div class="footer-block">
                     <h3 class="footer-title">Contact Info</h3>
                     <ul class="footer-links">
-                        <li style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001</li>
-                        <li style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900</li>
-                        <li style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com</li>
+                        <li style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="map-pin" style="width:18px;"></i> No 9. East Street, Madhampatti, Coimbatore 641010</li>
+                        <li style="display:flex;align-items:flex-start;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="phone" style="width:18px;flex-shrink:0;margin-top:3px;"></i><span>Call: 9500600525<br>WhatsApp: 8973355559<br>Customer Care: 7708853119</span></li>
                     </ul>
                 </div>
             </div>
@@ -864,8 +862,8 @@
 
                 function handleBuyNow() {
                     const { item, qty } = buildCartItem();
-                    CartManager.add(item, qty);
-                    window.location.href = 'checkout.html';
+                    sessionStorage.setItem('mb_buynow', JSON.stringify([{ product: item, quantity: qty }]));
+                    window.location.href = 'checkout.html?buynow=1';
                 }
 
                 // Wire up both desktop + mobile buttons

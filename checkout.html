@@ -441,11 +441,11 @@
                         We are committed to providing high-quality offerings designed to support daily wellness,
                         hygiene, and overall well-being.</p>
                     <div class="social-links">
-                        <a href="javascript:void(0)" class="social-link" title="Facebook"><i
+                        <a href="https://www.facebook.com/share/1Cc8K6GPUV/" target="_blank" rel="noopener noreferrer" class="social-link" title="Facebook"><i
                                 data-lucide="facebook"></i></a>
-                        <a href="javascript:void(0)" class="social-link" title="Instagram"><i
+                        <a href="https://www.instagram.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram"><i
                                 data-lucide="instagram"></i></a>
-                        <a href="javascript:void(0)" class="social-link" title="Youtube"><i
+                        <a href="https://www.youtube.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Youtube"><i
                                 data-lucide="youtube"></i></a>
                     </div>
                 </div>
@@ -474,15 +474,11 @@
                     <ul class="footer-links">
                         <li
                             style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
-                            <i data-lucide="map-pin" style="width:18px;"></i> 123 Fashion St, NY 10001
+                            <i data-lucide="map-pin" style="width:18px;"></i> No 9. East Street, Madhampatti, Coimbatore 641010
                         </li>
                         <li
-                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
-                            <i data-lucide="phone" style="width:18px;"></i> +1 234 567 8900
-                        </li>
-                        <li
-                            style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
-                            <i data-lucide="mail" style="width:18px;"></i> info@menhaboutique.com
+                            style="display:flex;align-items:flex-start;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;">
+                            <i data-lucide="phone" style="width:18px;flex-shrink:0;margin-top:3px;"></i><span>Call: 9500600525<br>WhatsApp: 8973355559<br>Customer Care: 7708853119</span>
                         </li>
                     </ul>
                 </div>
@@ -509,6 +505,30 @@
         let isCartLoading = false;
         let lastRenderId = 0;
         let lastDeliveryId = 0;
+
+        function getCheckoutItems() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('buynow') === '1') {
+                const buynow = sessionStorage.getItem('mb_buynow');
+                if (buynow) return JSON.parse(buynow);
+            }
+            return CartManager.getCart();
+        }
+
+        function getCheckoutTotal(items) {
+            return items.reduce((sum, item) => sum + (MainAPI.getProductPrice(item.product) * item.quantity), 0);
+        }
+
+        function updateBuynowQty(productId, variantId, newQty) {
+            if (newQty < 1) return;
+            const items = JSON.parse(sessionStorage.getItem('mb_buynow') || '[]');
+            const item = items.find(i => i.product.id == productId && (i.product.variant_id || '') == variantId);
+            if (item) {
+                item.quantity = newQty;
+                sessionStorage.setItem('mb_buynow', JSON.stringify(items));
+                renderCart();
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
@@ -557,7 +577,12 @@
                     const response = await MainAPI.createOrder(pendingOrder);
                     if (response.success) {
                         sessionStorage.removeItem('mb_pending_order');
-                        CartManager.clear();
+                        const isBuynowOrder = new URLSearchParams(window.location.search).get('buynow') === '1';
+                        if (isBuynowOrder) {
+                            sessionStorage.removeItem('mb_buynow');
+                        } else {
+                            CartManager.clear();
+                        }
                         showOrderSuccess(response.order.order_number, transactionId);
                     }
                 } catch (e) {
@@ -725,11 +750,13 @@
         async function renderCart() {
             const currentId = ++lastRenderId;
             isCartLoading = true;
+            const isBuynow = new URLSearchParams(window.location.search).get('buynow') === '1';
 
             const workspace = document.getElementById('cart-workspace');
-            const cartItems = CartManager.getCart();
+            const cartItems = getCheckoutItems();
 
             if (cartItems.length === 0) {
+                if (isBuynow) { sessionStorage.removeItem('mb_buynow'); window.location.href = 'index.html'; return; }
                 workspace.innerHTML = `
                     <div id="empty-cart-msg" style="text-align:center; padding: 4rem 1rem;">
                         <i data-lucide="shopping-cart" style="width: 60px; height: 60px; color: var(--color-border); margin-bottom: 1rem;"></i>
@@ -744,7 +771,7 @@
                 return;
             }
 
-            const cartTotal = CartManager.getTotalPrice();
+            const cartTotal = getCheckoutTotal(cartItems);
             const currentDeliveryCharge = await MainAPI.calculateDeliveryCharge(checkoutState, cartItems);
             
             if (currentId !== lastRenderId) return;
@@ -878,6 +905,21 @@
                 const title = item.product.title || item.product.name;
                 const price = MainAPI.getProductPrice(item.product);
                 const variantId = item.product.variant_id || '';
+                const qtyControl = isBuynow
+                    ? `<div class="qty-stepper">
+                                <button onclick="updateBuynowQty('${item.product.id}', '${variantId}', ${item.quantity - 1})">−</button>
+                                <span>${item.quantity}</span>
+                                <button onclick="updateBuynowQty('${item.product.id}', '${variantId}', ${item.quantity + 1})">+</button>
+                            </div>`
+                    : `<div class="qty-stepper">
+                                <button onclick="CartManager.update('${item.product.id}', ${item.quantity - 1}, '${variantId}')">−</button>
+                                <span>${item.quantity}</span>
+                                <button onclick="CartManager.update('${item.product.id}', ${item.quantity + 1}, '${variantId}')">+</button>
+                            </div>`;
+                const removeBtn = isBuynow ? '' : `
+                        <button class="remove-btn" onclick="CartManager.remove('${item.product.id}', '${variantId}')" title="Remove">
+                            <i data-lucide="x" style="width:18px;height:18px;"></i>
+                        </button>`;
                 cartLinesHtml += `
                     <div class="cart-line">
                         <img src="${img}" class="thumb" alt="${title}">
@@ -885,15 +927,9 @@
                             <h4 class="title">${title}</h4>
                             ${item.product.selected_variant ? `<div style="font-size:0.78rem;color:var(--color-text-light);">${item.product.selected_variant}</div>` : ''}
                             <div class="price">₹${(price * item.quantity).toFixed(2)}</div>
-                            <div class="qty-stepper">
-                                <button onclick="CartManager.update('${item.product.id}', ${item.quantity - 1}, '${variantId}')">−</button>
-                                <span>${item.quantity}</span>
-                                <button onclick="CartManager.update('${item.product.id}', ${item.quantity + 1}, '${variantId}')">+</button>
-                            </div>
+                            ${qtyControl}
                         </div>
-                        <button class="remove-btn" onclick="CartManager.remove('${item.product.id}', '${variantId}')" title="Remove">
-                            <i data-lucide="x" style="width:18px;height:18px;"></i>
-                        </button>
+                        ${removeBtn}
                     </div>
                 `;
             });
@@ -1025,7 +1061,7 @@
             }
 
             try {
-                const cartItems = CartManager.getCart();
+                const cartItems = getCheckoutItems();
                 const items = cartItems.map(i => ({
                     productId: i.product.id,
                     variantId: i.product.variant_id || null,
@@ -1064,7 +1100,7 @@
                 }
 
                 const currentDeliveryCharge = await MainAPI.calculateDeliveryCharge(checkoutState, cartItems);
-                const cartTotal = CartManager.getTotalPrice();
+                const cartTotal = getCheckoutTotal(cartItems);
                 const totalAmount = cartTotal + currentDeliveryCharge;
 
                 pendingOrderPayload = {

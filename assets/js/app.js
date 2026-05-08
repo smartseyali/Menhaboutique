@@ -89,8 +89,8 @@ window.addToCartDirect = function(productStr) {
 
 window.buyNowDirect = function(productStr) {
     const product = JSON.parse(decodeURIComponent(productStr));
-    CartManager.add(product, 1);
-    window.location.href = 'checkout.html';
+    sessionStorage.setItem('mb_buynow', JSON.stringify([{ product, quantity: 1 }]));
+    window.location.href = 'checkout.html?buynow=1';
 };
 
 window.productCardHtml = function(prod) {
@@ -247,39 +247,69 @@ async function loadBanners() {
     if (!bannerContainer) return;
 
     const banners = await MainAPI.fetchBanners();
-    if (banners && banners.length > 0) {
-        const slideHtml = banners.map((banner, i) => {
-            const img = banner.imageUrl || banner.image_url || 'https://via.placeholder.com/1200x500';
-            return `<div class="banner-slide"><img src="${img}" alt="Banner ${i + 1}" class="banner-img"></div>`;
-        }).join('');
-        // Duplicate slides for seamless infinite loop
-        bannerContainer.innerHTML = slideHtml + slideHtml;
-
-        let isResetting = false;
-        let autoSlide = setInterval(() => {
-            if (isResetting) return;
-            const w = bannerContainer.offsetWidth;
-            const next = bannerContainer.scrollLeft + w;
-            // If we've scrolled into the cloned set, silently jump back to real set
-            if (next >= w * banners.length) {
-                isResetting = true;
-                bannerContainer.scrollTo({ left: next - w * banners.length, behavior: 'smooth' });
-                setTimeout(() => {
-                    bannerContainer.scrollTo({ left: 0, behavior: 'instant' });
-                    isResetting = false;
-                }, 600);
-            } else {
-                bannerContainer.scrollTo({ left: next, behavior: 'smooth' });
-            }
-        }, 5000);
-
-        bannerContainer.addEventListener('mouseenter', () => clearInterval(autoSlide));
-        bannerContainer.addEventListener('touchstart', () => clearInterval(autoSlide), { passive: true });
-
-    } else {
-        bannerContainer.innerHTML = '<div style="padding: 2rem; text-align:center;">Promotional Banner</div>';
+    if (!banners || banners.length === 0) {
+        bannerContainer.innerHTML = '<div style="padding:2rem;text-align:center;">Promotional Banner</div>';
+        return;
     }
-    if (indicatorsContainer) indicatorsContainer.innerHTML = '';
+
+    // Build slides
+    bannerContainer.innerHTML = banners.map((banner, i) => {
+        const img = banner.imageUrl || banner.image_url || 'https://via.placeholder.com/1200x500';
+        const link = banner.link || banner.link_url || banner.redirect_url || banner.url || '';
+        const inner = link
+            ? `<a href="${link}" target="_blank" rel="noopener noreferrer" style="display:block;width:100%;height:100%;"><img src="${img}" alt="Banner ${i + 1}" class="banner-img"></a>`
+            : `<img src="${img}" alt="Banner ${i + 1}" class="banner-img">`;
+        return `<div class="banner-slide${i === 0 ? ' active' : ''}">${inner}</div>`;
+    }).join('');
+
+    // Build dot indicators
+    if (indicatorsContainer) {
+        indicatorsContainer.innerHTML = banners.map((_, i) =>
+            `<button class="carousel-dot${i === 0 ? ' active' : ''}" onclick="carouselGoTo(${i})" aria-label="Slide ${i + 1}"></button>`
+        ).join('');
+    }
+
+    // Show nav buttons only if more than 1 slide
+    const prevBtn = document.getElementById('carousel-prev');
+    const nextBtn = document.getElementById('carousel-next');
+    if (banners.length <= 1) {
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    let current = 0;
+    const slides = bannerContainer.querySelectorAll('.banner-slide');
+    const dots = indicatorsContainer ? indicatorsContainer.querySelectorAll('.carousel-dot') : [];
+
+    function goTo(index) {
+        const prev = current;
+        current = (index + banners.length) % banners.length;
+        if (prev === current) return;
+
+        slides[prev].classList.add('slide-out');
+        slides[prev].classList.remove('active');
+        slides[current].style.transform = 'translateX(100%)';
+        slides[current].classList.remove('slide-out');
+        // Force reflow then activate
+        slides[current].offsetWidth;
+        slides[current].classList.add('active');
+
+        setTimeout(() => slides[prev].classList.remove('slide-out'), 650);
+
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    }
+
+    window.carouselGoTo = goTo;
+    window.carouselNext = () => { goTo(current + 1); resetTimer(); };
+    window.carouselPrev = () => { goTo(current - 1); resetTimer(); };
+
+    let timer = setInterval(() => goTo(current + 1), 5000);
+    function resetTimer() { clearInterval(timer); timer = setInterval(() => goTo(current + 1), 5000); }
+
+    bannerContainer.addEventListener('mouseenter', () => clearInterval(timer));
+    bannerContainer.addEventListener('mouseleave', () => { timer = setInterval(() => goTo(current + 1), 5000); });
+    bannerContainer.addEventListener('touchstart', () => clearInterval(timer), { passive: true });
 }
 
 async function loadCategories() {
