@@ -257,7 +257,7 @@ async function loadBanners() {
         const img = banner.imageUrl || banner.image_url || 'https://via.placeholder.com/1200x500';
         const link = banner.link || banner.link_url || banner.redirect_url || banner.url || '';
         const inner = link
-            ? `<a href="${link}" target="_blank" rel="noopener noreferrer" style="display:block;width:100%;height:100%;"><img src="${img}" alt="Banner ${i + 1}" class="banner-img"></a>`
+            ? `<a href="${link}" style="display:block;width:100%;height:100%;"><img src="${img}" alt="Banner ${i + 1}" class="banner-img"></a>`
             : `<img src="${img}" alt="Banner ${i + 1}" class="banner-img">`;
         return `<div class="banner-slide${i === 0 ? ' active' : ''}">${inner}</div>`;
     }).join('');
