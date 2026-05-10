@@ -11,7 +11,7 @@ window.addEventListener('pageshow', () => window.scrollTo(0, 0));
 const SCHEMA = 'menha_boutique';
 
 // ── STATE ─────────────────────────────────────────────────
-let allProducts = [], allCategories = [], allOrders = [], allUsers = [], allBanners = [], allTariffs = [], allStates = [], allMessages = [];
+let allProducts = [], allCategories = [], allOrders = [], allUsers = [], allBanners = [], allTariffs = [], allStates = [], allMessages = [], allCountries = [], allCities = [];
 
 // ── INIT ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -162,6 +162,7 @@ async function loadTab(tab) {
         case 'delivery': await loadDelivery(); break;
         case 'couriers': await loadCouriers(); break;
         case 'payment': await loadPayment(); break;
+        case 'locations': await loadLocations(); break;
         case 'messages': await loadMessages(); break;
         case 'settings': await loadSettings(); break;
     }
@@ -1874,3 +1875,217 @@ async function deleteMessage(id) {
 window.filterMessages = filterMessages;
 window.viewMessage = viewMessage;
 window.deleteMessage = deleteMessage;
+
+// Location window exposure
+window.loadLocations = loadLocations;
+window.loadCountries = loadCountries;
+window.loadAdminStates = loadAdminStates;
+window.loadCities = loadCities;
+window.filterCities = filterCities;
+window.openCountryModal = openCountryModal;
+window.saveCountry = saveCountry;
+window.deleteCountry = deleteCountry;
+window.openStateModal = openStateModal;
+window.saveState = saveState;
+window.deleteState = deleteState;
+window.openCityModal = openCityModal;
+window.saveCity = saveCity;
+window.deleteCity = deleteCity;
+// ── LOCATIONS ──────────────────────────────────────────────
+async function loadLocations() {
+    await Promise.all([loadCountries(), loadAdminStates(), loadCities()]);
+}
+
+async function loadCountries() {
+    try {
+        allCountries = await Supabase.from('countries').select('*').order('name').get();
+        const tbody = document.getElementById('countries-tbody');
+        if (!allCountries.length) { tbody.innerHTML = '<tr><td colspan="3" class="loading-row">No countries</td></tr>'; return; }
+        tbody.innerHTML = allCountries.map(c => `
+            <tr>
+                <td style="font-weight:600;">${c.name}</td>
+                <td>${c.code}</td>
+                <td>
+                    <button class="btn-icon" onclick="openCountryModal('${c.id}')"><i data-lucide="pencil"></i></button>
+                    <button class="btn-icon del" onclick="deleteCountry('${c.id}', '${c.name}')"><i data-lucide="trash-2"></i></button>
+                </td>
+            </tr>`).join('');
+        lucide.createIcons();
+    } catch(e) { showToast('Failed to load countries', 'error'); }
+}
+
+async function loadAdminStates() {
+    try {
+        allStates = await Supabase.from('states').select('*, countries(name)').order('name').get();
+        const tbody = document.getElementById('admin-states-tbody');
+        if (!allStates.length) { tbody.innerHTML = '<tr><td colspan="5" class="loading-row">No states</td></tr>'; return; }
+        tbody.innerHTML = allStates.map(s => `
+            <tr>
+                <td style="font-weight:600;">${s.name}</td>
+                <td>${s.code}</td>
+                <td>${s.zone}</td>
+                <td>${s.countries ? s.countries.name : '—'}</td>
+                <td>
+                    <button class="btn-icon" onclick="openStateModal('${s.id}')"><i data-lucide="pencil"></i></button>
+                    <button class="btn-icon del" onclick="deleteState('${s.id}', '${s.name}')"><i data-lucide="trash-2"></i></button>
+                </td>
+            </tr>`).join('');
+        
+        const filter = document.getElementById('city-state-filter');
+        const currentVal = filter.value;
+        filter.innerHTML = '<option value="">All States</option>' + 
+            allStates.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        filter.value = currentVal;
+        
+        lucide.createIcons();
+    } catch(e) { showToast('Failed to load states', 'error'); }
+}
+
+async function loadCities(stateId = null) {
+    try {
+        let query = Supabase.from('cities').select('*, states(name)').order('name');
+        if (stateId) query = query.eq('state_id', stateId);
+        allCities = await query.get();
+        renderCities(allCities);
+    } catch(e) { showToast('Failed to load cities', 'error'); }
+}
+
+function renderCities(list) {
+    const tbody = document.getElementById('admin-cities-tbody');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="3" class="loading-row">No cities found</td></tr>'; return; }
+    tbody.innerHTML = list.map(c => `
+        <tr>
+            <td style="font-weight:600;">${c.name}</td>
+            <td>${c.states ? c.states.name : '—'}</td>
+            <td>
+                <button class="btn-icon" onclick="openCityModal('${c.id}')"><i data-lucide="pencil"></i></button>
+                <button class="btn-icon del" onclick="deleteCity('${c.id}', '${c.name}')"><i data-lucide="trash-2"></i></button>
+            </td>
+        </tr>`).join('');
+    lucide.createIcons();
+}
+
+function filterCities() {
+    const q = document.getElementById('city-search').value.toLowerCase();
+    renderCities(allCities.filter(c => c.name.toLowerCase().includes(q)));
+}
+
+// Country CRUD
+function openCountryModal(id = null) {
+    document.getElementById('country-modal-title').textContent = id ? 'Edit Country' : 'Add Country';
+    document.getElementById('country-form').reset();
+    document.getElementById('countf-id').value = id || '';
+    if (id) {
+        const c = allCountries.find(x => x.id === id);
+        if (c) {
+            document.getElementById('countf-name').value = c.name;
+            document.getElementById('countf-code').value = c.code;
+        }
+    }
+    openModal('country-modal');
+}
+async function saveCountry(e) {
+    e.preventDefault();
+    const id = document.getElementById('countf-id').value;
+    const data = { name: document.getElementById('countf-name').value, code: document.getElementById('countf-code').value };
+    try {
+        if (id) await Supabase.from('countries').eq('id', id).update(data);
+        else await Supabase.from('countries').insert(data);
+        showToast('Country saved!');
+        closeAllModals();
+        loadCountries();
+    } catch(err) { showToast(err.message, 'error'); }
+}
+function deleteCountry(id, name) {
+    confirmDelete(`Delete country "${name}"?`, async () => {
+        try {
+            await Supabase.from('countries').eq('id', id).delete();
+            showToast('Country deleted');
+            loadCountries();
+        } catch(e) { showToast('Delete failed', 'error'); }
+    });
+}
+
+// State CRUD
+function openStateModal(id = null) {
+    document.getElementById('state-modal-title').textContent = id ? 'Edit State' : 'Add State';
+    document.getElementById('state-form').reset();
+    document.getElementById('statef-id').value = id || '';
+    document.getElementById('statef-country').innerHTML = allCountries.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    if (id) {
+        const s = allStates.find(x => x.id === id);
+        if (s) {
+            document.getElementById('statef-name').value = s.name;
+            document.getElementById('statef-code').value = s.code;
+            document.getElementById('statef-country').value = s.country_id;
+            document.getElementById('statef-zone').value = s.zone;
+        }
+    }
+    openModal('state-modal');
+}
+async function saveState(e) {
+    e.preventDefault();
+    const id = document.getElementById('statef-id').value;
+    const data = {
+        name: document.getElementById('statef-name').value,
+        code: document.getElementById('statef-code').value,
+        country_id: document.getElementById('statef-country').value,
+        zone: document.getElementById('statef-zone').value
+    };
+    try {
+        if (id) await Supabase.from('states').eq('id', id).update(data);
+        else await Supabase.from('states').insert(data);
+        showToast('State saved!');
+        closeAllModals();
+        loadAdminStates();
+    } catch(err) { showToast(err.message, 'error'); }
+}
+function deleteState(id, name) {
+    confirmDelete(`Delete state "${name}"?`, async () => {
+        try {
+            await Supabase.from('states').eq('id', id).delete();
+            showToast('State deleted');
+            loadAdminStates();
+        } catch(e) { showToast('Delete failed', 'error'); }
+    });
+}
+
+// City CRUD
+function openCityModal(id = null) {
+    document.getElementById('city-modal-title').textContent = id ? 'Edit City' : 'Add City';
+    document.getElementById('city-form').reset();
+    document.getElementById('cityf-id').value = id || '';
+    document.getElementById('cityf-state').innerHTML = allStates.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    if (id) {
+        const c = allCities.find(x => x.id === id);
+        if (c) {
+            document.getElementById('cityf-name').value = c.name;
+            document.getElementById('cityf-state').value = c.state_id;
+        }
+    }
+    openModal('city-modal');
+}
+async function saveCity(e) {
+    e.preventDefault();
+    const id = document.getElementById('cityf-id').value;
+    const data = {
+        name: document.getElementById('cityf-name').value,
+        state_id: document.getElementById('cityf-state').value
+    };
+    try {
+        if (id) await Supabase.from('cities').eq('id', id).update(data);
+        else await Supabase.from('cities').insert(data);
+        showToast('City saved!');
+        closeAllModals();
+        loadCities(document.getElementById('city-state-filter').value);
+    } catch(err) { showToast(err.message, 'error'); }
+}
+function deleteCity(id, name) {
+    confirmDelete(`Delete city "${name}"?`, async () => {
+        try {
+            await Supabase.from('cities').eq('id', id).delete();
+            showToast('City deleted');
+            loadCities(document.getElementById('city-state-filter').value);
+        } catch(e) { showToast('Delete failed', 'error'); }
+    });
+}

@@ -506,6 +506,16 @@
         let lastRenderId = 0;
         let lastDeliveryId = 0;
 
+        // Persists new-address form values across renderCart() rebuilds
+        let newAddrData = {
+            first_name: '', last_name: '', email: '', phone: '',
+            address1: '', address2: '', country: '', state: '',
+            state_id: '', city: '', postcode: '', alt_phone: ''
+        };
+        let cachedCountries = [];
+        let cachedStates = [];   // states for currently selected country
+        let cachedCities = [];   // cities for currently selected state
+
         function getCheckoutItems() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('buynow') === '1') {
@@ -530,13 +540,72 @@
             }
         }
 
+        // Collect current form field values into newAddrData before a rebuild
+        function collectNewAddrFormState() {
+            const f = id => (document.getElementById(id) || {}).value || '';
+            newAddrData.first_name = f('cust-first-name');
+            newAddrData.last_name  = f('cust-last-name');
+            newAddrData.email      = f('cust-email');
+            newAddrData.phone      = f('cust-phone');
+            newAddrData.address1   = f('cust-address');
+            newAddrData.address2   = f('cust-address2');
+            newAddrData.postcode   = f('cust-postcode');
+            newAddrData.alt_phone  = f('cust-alt-phone');
+            const stateEl = document.getElementById('cust-state');
+            if (stateEl && stateEl.value) {
+                newAddrData.state = stateEl.value;
+                const selOpt = stateEl.options[stateEl.selectedIndex];
+                if (selOpt) newAddrData.state_id = selOpt.dataset.id || '';
+            }
+            newAddrData.country = f('cust-country');
+            newAddrData.city    = f('cust-city');
+        }
+
+        // Restore form field values after a rebuild
+        function restoreNewAddrFormState() {
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+            set('cust-first-name', newAddrData.first_name);
+            set('cust-last-name',  newAddrData.last_name);
+            set('cust-email',      newAddrData.email);
+            set('cust-phone',      newAddrData.phone);
+            set('cust-address',    newAddrData.address1);
+            set('cust-address2',   newAddrData.address2);
+            set('cust-postcode',   newAddrData.postcode);
+            set('cust-alt-phone',  newAddrData.alt_phone);
+            // Restore country select
+            if (newAddrData.country) {
+                const cs = document.getElementById('cust-country');
+                if (cs) cs.value = newAddrData.country;
+            }
+        }
+
+        // Restore comment (notes) textarea
+        let savedComments = '';
+        function collectComments() {
+            const el = document.getElementById('order-comments');
+            if (el) savedComments = el.value;
+        }
+        function restoreComments() {
+            const el = document.getElementById('order-comments');
+            if (el && savedComments) el.value = savedComments;
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
             await fetchGateways();
             await fetchCouriers();
             await renderCart();
-            window.addEventListener('cartUpdated', renderCart);
-            
+
+            // On cartUpdated: only update the summary panel (never wipe the address form)
+            window.addEventListener('cartUpdated', async () => {
+                collectNewAddrFormState();
+                collectComments();
+                await updateSummaryPanel();
+                restoreNewAddrFormState();
+                restoreComments();
+                lucide.createIcons();
+            });
+
             // Handle Payment Callback
             checkPaymentStatus();
         });
@@ -659,40 +728,50 @@
         }
 
         async function updateStatesUI() {
-            const countryId = document.getElementById('cust-country').value;
+            collectNewAddrFormState();
+            const countryName = document.getElementById('cust-country').value;
             const stateSelect = document.getElementById('cust-state');
             stateSelect.innerHTML = '<option value="">Select State</option>';
+            // Reset city too
+            const citySelect = document.getElementById('cust-city');
+            if (citySelect) citySelect.innerHTML = '<option value="">Select City</option>';
+            newAddrData.state = ''; newAddrData.state_id = ''; newAddrData.city = '';
+            cachedStates = []; cachedCities = [];
 
-            const countries = JSON.parse(sessionStorage.getItem('mb_countries') || '[]');
-            const country = countries.find(c => c.name === countryId);
+            const country = cachedCountries.find(c => c.name === countryName);
+            if (!country) return;
 
-            if (country) {
-                const states = await MainAPI.getStates(country.id);
-                states.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.name;
-                    opt.textContent = s.name;
-                    opt.dataset.id = s.id;
-                    stateSelect.appendChild(opt);
-                });
-            }
+            const states = await MainAPI.getStates(country.id);
+            cachedStates = states;
+            states.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.name;
+                opt.textContent = s.name;
+                opt.dataset.id = s.id;
+                stateSelect.appendChild(opt);
+            });
         }
 
         async function updateCitiesUI() {
+            collectNewAddrFormState();
             const stateSelect = document.getElementById('cust-state');
             const selectedOpt = stateSelect.options[stateSelect.selectedIndex];
-            
+            const stateId = selectedOpt ? selectedOpt.dataset.id : null;
+
             if (stateSelect.value) {
                 checkoutState = stateSelect.value;
-                await updateDeliveryUI();
+                newAddrData.state = stateSelect.value;
+                newAddrData.state_id = stateId || '';
             }
 
-            const stateId = selectedOpt ? selectedOpt.dataset.id : null;
             const citySelect = document.getElementById('cust-city');
             citySelect.innerHTML = '<option value="">Select City</option>';
+            newAddrData.city = '';
+            cachedCities = [];
 
             if (stateId) {
                 const cities = await MainAPI.getCities(stateId);
+                cachedCities = cities;
                 cities.forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c.name;
@@ -700,33 +779,111 @@
                     citySelect.appendChild(opt);
                 });
             }
+
+            // Update delivery charge for the new state
+            await updateDeliveryUI();
         }
 
         async function updateDeliveryUI() {
             const currentId = ++lastDeliveryId;
-            const cartItems = CartManager.getCart();
+            const cartItems = getCheckoutItems();
             const charge = await MainAPI.calculateDeliveryCharge(checkoutState, cartItems);
-            
+
             if (currentId !== lastDeliveryId) return;
 
-            const subtotal = CartManager.getTotalPrice();
+            const subtotal = getCheckoutTotal(cartItems);
             const total = subtotal + charge;
-            
+
             const chargeEl = document.getElementById('summary-delivery-charge');
-            const totalEl = document.getElementById('summary-total-payable');
-            
-            if (chargeEl) chargeEl.innerText = charge > 0 ? `₹${charge.toFixed(2)}` : '₹0.00';
-            if (totalEl) totalEl.innerText = `₹${total.toFixed(2)}`;
+            const totalEl  = document.getElementById('summary-total-payable');
+            const placeBtn = document.getElementById('place-order-btn');
+
+            if (chargeEl) chargeEl.innerText = `₹${charge.toFixed(2)}`;
+            if (totalEl)  totalEl.innerText  = `₹${total.toFixed(2)}`;
+            if (placeBtn) placeBtn.innerHTML =
+                `<i data-lucide="shield-check" style="width:18px;height:18px;"></i> Place Order — ₹${total.toFixed(2)}`;
+            lucide.createIcons();
+        }
+
+        // Lightweight update: refresh only the right-side summary panel
+        async function updateSummaryPanel() {
+            const currentId = ++lastDeliveryId;
+            const isBuynow = new URLSearchParams(window.location.search).get('buynow') === '1';
+            const cartItems = getCheckoutItems();
+            const cartTotal = getCheckoutTotal(cartItems);
+            const charge = await MainAPI.calculateDeliveryCharge(checkoutState, cartItems);
+            if (currentId !== lastDeliveryId) return;
+            const totalPayable = cartTotal + charge;
+
+            // Rebuild cart lines HTML
+            let cartLinesHtml = '';
+            cartItems.forEach(item => {
+                const img   = MainAPI.getProductImage(item.product);
+                const title = item.product.title || item.product.name;
+                const price = MainAPI.getProductPrice(item.product);
+                const variantId = item.product.variant_id || '';
+                const qtyCtrl = isBuynow
+                    ? `<div class="qty-stepper">
+                            <button onclick="updateBuynowQty('${item.product.id}','${variantId}',${item.quantity-1})">−</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="updateBuynowQty('${item.product.id}','${variantId}',${item.quantity+1})">+</button>
+                        </div>`
+                    : `<div class="qty-stepper">
+                            <button onclick="CartManager.update('${item.product.id}',${item.quantity-1},'${variantId}')">−</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="CartManager.update('${item.product.id}',${item.quantity+1},'${variantId}')">+</button>
+                        </div>`;
+                const removeBtn = isBuynow ? '' :
+                    `<button class="remove-btn" onclick="CartManager.remove('${item.product.id}','${variantId}')" title="Remove">
+                        <i data-lucide="x" style="width:18px;height:18px;"></i>
+                    </button>`;
+                cartLinesHtml += `
+                    <div class="cart-line">
+                        <img src="${img}" class="thumb" alt="${title}">
+                        <div class="info">
+                            <h4 class="title">${title}</h4>
+                            ${item.product.selected_variant ? `<div style="font-size:0.78rem;color:var(--color-text-light);">${item.product.selected_variant}</div>` : ''}
+                            <div class="price">₹${(price * item.quantity).toFixed(2)}</div>
+                            ${qtyCtrl}
+                        </div>
+                        ${removeBtn}
+                    </div>`;
+            });
+
+            const gatewayName = activeGateway ? activeGateway.name.toUpperCase() : 'PREPAID';
+            const summaryCard = document.querySelector('.summary-card-v2');
+            if (!summaryCard) { await renderCart(); return; }
+
+            summaryCard.innerHTML = `
+                <h3>Order Summary</h3>
+                <div>${cartLinesHtml}</div>
+                <div class="summary-divider"></div>
+                <div class="summary-row"><span>Subtotal</span><span id="summary-subtotal">₹${cartTotal.toFixed(2)}</span></div>
+                <div class="summary-row"><span>Delivery</span><span id="summary-delivery-charge">₹${charge.toFixed(2)}</span></div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span class="amount" id="summary-total-payable">₹${totalPayable.toFixed(2)}</span>
+                </div>
+                <div class="payment-strip">
+                    <span>Payment Method</span>
+                    <strong>${gatewayName}</strong>
+                </div>
+                <button type="button" id="place-order-btn" class="place-order-btn" onclick="checkout()">
+                    <i data-lucide="shield-check" style="width:18px;height:18px;"></i>
+                    Place Order — ₹${totalPayable.toFixed(2)}
+                </button>
+                <div class="trust-row">
+                    <div class="trust-item"><i data-lucide="truck"></i> All-India shipping; delivery within 6 working days.</div>
+                    <div class="trust-item"><i data-lucide="alert-circle"></i> Damage claims must be reported within 24 hours of delivery.</div>
+                    <div class="trust-item"><i data-lucide="rotate-ccw"></i> No returns, no refunds policy.</div>
+                </div>
+            `;
         }
 
         async function selectGateway(id) {
             const gateways = await MainAPI.getAvailableGateways();
             activeGateway = gateways.find(g => g.id === id);
-            
-            // Update summary UI if it's rendered
-            renderCart();
-            
-            // Update the labels in the modal
+            // Update modal labels
             const gwList = document.getElementById('gateways-list');
             if (gwList) {
                 gwList.querySelectorAll('label').forEach(lbl => {
@@ -740,14 +897,164 @@
                     }
                 });
             }
+            // Update the payment method label in the summary
+            const strip = document.querySelector('.payment-strip strong');
+            if (strip && activeGateway) strip.textContent = activeGateway.name.toUpperCase();
         }
 
         async function selectCourier(id) {
             activeCourier = allAvailableCouriers.find(c => c.id === id);
-            renderCart();
+            // Update visual selection only — no full rerender
+            document.querySelectorAll('.courier-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.courierId === id);
+            });
+        }
+
+        // Save new-address form → Supabase → switch to existing mode
+        async function saveAndUseNewAddress() {
+            const btn = document.getElementById('save-address-btn');
+            const addr = {
+                first_name:    (document.getElementById('cust-first-name') || {}).value?.trim(),
+                last_name:     (document.getElementById('cust-last-name')  || {}).value?.trim(),
+                phone_number:  (document.getElementById('cust-phone')      || {}).value?.trim(),
+                alternate_phone:(document.getElementById('cust-alt-phone') || {}).value?.trim() || null,
+                address_line1: (document.getElementById('cust-address')    || {}).value?.trim(),
+                address_line2: (document.getElementById('cust-address2')   || {}).value?.trim() || null,
+                country:       (document.getElementById('cust-country')    || {}).value || 'India',
+                state:         (document.getElementById('cust-state')      || {}).value,
+                city:          (document.getElementById('cust-city')       || {}).value,
+                postal_code:   (document.getElementById('cust-postcode')   || {}).value?.trim(),
+            };
+
+            if (!addr.first_name || !addr.phone_number || !addr.address_line1 ||
+                !addr.state || !addr.city || !addr.postal_code) {
+                showToast('Please fill all required fields (*)', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" style="width:15px;height:15px;animation:spin 1s linear infinite;"></i> Saving...';
+            lucide.createIcons();
+
+            try {
+                const result = await MainAPI.upsertUserAddress(addr);
+                const saved = Array.isArray(result) ? result[0] : result;
+                if (saved && saved.id) {
+                    selectedAddressId = saved.id;
+                    checkoutState = addr.state;
+                    newAddrData = { first_name:'',last_name:'',email:'',phone:'',address1:'',address2:'',country:'',state:'',state_id:'',city:'',postcode:'',alt_phone:'' };
+                    addressMode = 'existing';
+                    showToast('Address saved!', 'success');
+                    await renderCart();
+                    await updateDeliveryUI();
+                } else {
+                    throw new Error('Address save returned no ID');
+                }
+            } catch (e) {
+                showToast(e.message || 'Could not save address', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;"></i> Save & Use This Address';
+                lucide.createIcons();
+            }
+        }
+
+        // Open inline address-edit modal for a saved address
+        function openEditAddressModal(addrId) {
+            const addresses = JSON.parse(sessionStorage.getItem('mb_addresses') || '[]');
+            const addr = addresses.find(a => a.id == addrId);
+            if (!addr) return;
+
+            const existing = document.getElementById('inline-edit-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'inline-edit-modal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9998;backdrop-filter:blur(3px);';
+            modal.innerHTML = `
+                <div style="background:#fff;width:92%;max-width:520px;border-radius:18px;padding:1.75rem;max-height:90vh;overflow-y:auto;position:relative;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+                        <h3 style="margin:0;font-size:1.1rem;font-weight:700;color:var(--color-primary-dark);">Edit Address</h3>
+                        <button onclick="document.getElementById('inline-edit-modal').remove()" style="background:none;border:none;cursor:pointer;color:var(--color-text-light);padding:4px;">
+                            <i data-lucide="x" style="width:20px;height:20px;"></i>
+                        </button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">First Name *</label>
+                            <input class="form-input" id="ied-first" value="${addr.first_name||''}"></div>
+                        <div class="form-group"><label class="form-label">Last Name</label>
+                            <input class="form-input" id="ied-last" value="${addr.last_name||''}"></div>
+                        <div class="form-group full"><label class="form-label">Address Line 1 *</label>
+                            <input class="form-input" id="ied-line1" value="${addr.address_line1||''}"></div>
+                        <div class="form-group full"><label class="form-label">Address Line 2</label>
+                            <input class="form-input" id="ied-line2" value="${addr.address_line2||''}"></div>
+                        <div class="form-group"><label class="form-label">Phone *</label>
+                            <input class="form-input" type="tel" id="ied-phone" value="${addr.phone_number||''}"></div>
+                        <div class="form-group"><label class="form-label">Alt Phone</label>
+                            <input class="form-input" type="tel" id="ied-alt-phone" value="${addr.alternate_phone||''}"></div>
+                        <div class="form-group"><label class="form-label">State *</label>
+                            <input class="form-input" id="ied-state" value="${addr.state||''}"></div>
+                        <div class="form-group"><label class="form-label">City *</label>
+                            <input class="form-input" id="ied-city" value="${addr.city||''}"></div>
+                        <div class="form-group"><label class="form-label">Post Code *</label>
+                            <input class="form-input" id="ied-zip" value="${addr.zip_code||''}"></div>
+                        <div class="form-group"><label class="form-label">Country</label>
+                            <input class="form-input" id="ied-country" value="${addr.country||'India'}"></div>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:1rem;">
+                        <button onclick="document.getElementById('inline-edit-modal').remove()"
+                            style="flex:1;padding:12px;background:#f4f4f4;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Cancel</button>
+                        <button id="ied-save-btn" onclick="saveInlineEdit('${addrId}')"
+                            style="flex:2;padding:12px;background:var(--color-primary);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                            <i data-lucide="save" style="width:16px;height:16px;"></i> Save Changes
+                        </button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+        }
+
+        async function saveInlineEdit(addrId) {
+            const btn = document.getElementById('ied-save-btn');
+            const f = id => (document.getElementById(id)||{}).value?.trim() || '';
+            const payload = {
+                id: addrId,
+                first_name:     f('ied-first'),
+                last_name:      f('ied-last'),
+                address_line1:  f('ied-line1'),
+                address_line2:  f('ied-line2') || null,
+                phone_number:   f('ied-phone'),
+                alternate_phone:f('ied-alt-phone') || null,
+                state:          f('ied-state'),
+                city:           f('ied-city'),
+                zip_code:       f('ied-zip'),
+                country:        f('ied-country') || 'India'
+            };
+            if (!payload.first_name || !payload.address_line1 || !payload.phone_number ||
+                !payload.state || !payload.city || !payload.zip_code) {
+                showToast('Fill all required fields', 'error'); return;
+            }
+            btn.disabled = true;
+            btn.innerHTML = 'Saving...';
+            try {
+                await MainAPI.upsertUserAddress(payload);
+                document.getElementById('inline-edit-modal').remove();
+                checkoutState = payload.state;
+                showToast('Address updated!', 'success');
+                await renderCart();
+                await updateDeliveryUI();
+            } catch (e) {
+                showToast(e.message || 'Save failed', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="save" style="width:16px;height:16px;"></i> Save Changes';
+                lucide.createIcons();
+            }
         }
 
         async function renderCart() {
+            // Save current form state before any rebuild
+            if (addressMode === 'new') collectNewAddrFormState();
+            collectComments();
+
             const currentId = ++lastRenderId;
             isCartLoading = true;
             const isBuynow = new URLSearchParams(window.location.search).get('buynow') === '1';
@@ -758,14 +1065,13 @@
             if (cartItems.length === 0) {
                 if (isBuynow) { sessionStorage.removeItem('mb_buynow'); window.location.href = 'index.html'; return; }
                 workspace.innerHTML = `
-                    <div id="empty-cart-msg" style="text-align:center; padding: 4rem 1rem;">
-                        <i data-lucide="shopping-cart" style="width: 60px; height: 60px; color: var(--color-border); margin-bottom: 1rem;"></i>
-                        <h2 style="color: var(--color-primary-dark); margin-bottom: 0.5rem;">Your Cart is Empty</h2>
-                        <a href="cart.html" style="background: var(--color-primary); color: white; padding: 12px 30px; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; margin-top: 1rem;">
+                    <div style="text-align:center; padding: 4rem 1rem;">
+                        <i data-lucide="shopping-cart" style="width:60px;height:60px;color:var(--color-border);margin-bottom:1rem;"></i>
+                        <h2 style="color:var(--color-primary-dark);margin-bottom:0.5rem;">Your Cart is Empty</h2>
+                        <a href="cart.html" style="background:var(--color-primary);color:white;padding:12px 30px;border-radius:50px;font-weight:600;display:inline-flex;align-items:center;gap:8px;margin-top:1rem;">
                             <i data-lucide="arrow-right"></i> Go to Cart
                         </a>
-                    </div>
-                `;
+                    </div>`;
                 lucide.createIcons();
                 isCartLoading = false;
                 return;
@@ -773,20 +1079,16 @@
 
             const cartTotal = getCheckoutTotal(cartItems);
             const currentDeliveryCharge = await MainAPI.calculateDeliveryCharge(checkoutState, cartItems);
-            
+
             if (currentId !== lastRenderId) return;
             isCartLoading = false;
-            workspace.style.opacity = '1';
 
             const totalPayable = cartTotal + currentDeliveryCharge;
             const gatewayNameDisplay = activeGateway ? activeGateway.name.toUpperCase() : 'PREPAID';
-            const deliveryDisp = currentDeliveryCharge > 0 ? `₹${currentDeliveryCharge.toFixed(2)}` : '₹0.00';
 
-            const user = MainAPI.getUser();
             const isLoggedIn = MainAPI.isAuthenticated();
-
             let addresses = [];
-            let countries = [];
+
             if (isLoggedIn) {
                 addresses = await MainAPI.getUserAddresses();
                 sessionStorage.setItem('mb_addresses', JSON.stringify(addresses));
@@ -794,111 +1096,135 @@
                     selectedAddressId = addresses[0].id;
                     checkoutState = addresses[0].state_name || addresses[0].state || checkoutState;
                 }
-
-                if (addressMode === 'new') {
-                    countries = await MainAPI.getCountries();
-                    sessionStorage.setItem('mb_countries', JSON.stringify(countries));
+                // Pre-load countries cache once
+                if (!cachedCountries.length) {
+                    cachedCountries = await MainAPI.getCountries();
+                    sessionStorage.setItem('mb_countries', JSON.stringify(cachedCountries));
                 }
             }
 
-            // ── Build address section content ──
+            // ── Address section HTML ──
             let addressBodyHtml = '';
             if (!isLoggedIn) {
                 addressBodyHtml = `
                     <div class="login-banner">
-                        <i data-lucide="lock" style="width: 40px; height: 40px; color: var(--color-text-light);"></i>
+                        <i data-lucide="lock" style="width:40px;height:40px;color:var(--color-text-light);"></i>
                         <h4>Sign in to checkout</h4>
-                        <p style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 0;">Access your saved addresses and track your orders.</p>
+                        <p style="color:var(--color-text-light);font-size:0.9rem;margin-bottom:0;">Access your saved addresses and track your orders.</p>
                         <a href="login.html"><i data-lucide="log-in" style="width:16px;height:16px;"></i> Sign In / Sign Up</a>
-                    </div>
-                `;
+                    </div>`;
             } else if (addressMode === 'existing') {
                 if (addresses.length === 0) {
                     addressBodyHtml = `
                         <div class="login-banner" style="padding:2rem;">
                             <i data-lucide="map-pin" style="width:36px;height:36px;color:var(--color-text-light);"></i>
                             <h4 style="margin-bottom:0.25rem;">No saved addresses</h4>
-                            <p style="color:var(--color-text-light); font-size:0.88rem; margin:0;">Switch to "New address" above to add one.</p>
+                            <p style="color:var(--color-text-light);font-size:0.88rem;margin:0;">Switch to "New address" above to add one.</p>
                         </div>`;
                 } else {
                     addressBodyHtml = '<div class="addr-list">';
                     addresses.forEach(addr => {
-                        const isSelected = selectedAddressId == addr.id;
+                        const isSel = selectedAddressId == addr.id;
                         addressBodyHtml += `
-                            <div class="saved-address ${isSelected ? 'selected' : ''}" onclick="selectAddress('${addr.id}')">
+                            <div class="saved-address ${isSel ? 'selected' : ''}" onclick="selectAddress('${addr.id}')">
                                 <div class="radio"></div>
-                                <div style="flex:1; min-width:0;">
+                                <div style="flex:1;min-width:0;">
                                     <div class="saved-address-name">${addr.first_name} ${addr.last_name || ''}</div>
                                     <div class="saved-address-body">
-                                        ${addr.address_line1 || addr.address_line || ''}<br>
+                                        ${addr.address_line1 || ''}<br>
                                         ${addr.city}, ${addr.state_name || addr.state} - ${addr.postal_code || addr.zip_code}<br>
                                         ${addr.country || 'India'}
                                         ${addr.phone_number ? `<div class="phone" style="margin-top:4px;">📞 ${addr.phone_number}</div>` : ''}
+                                        ${addr.alternate_phone ? `<div class="phone" style="margin-top:2px;">📞 Alt: ${addr.alternate_phone}</div>` : ''}
                                     </div>
                                 </div>
-                                <button class="delete-btn" onclick="deleteAddressUI('${addr.id}', event)" title="Delete address">
-                                    <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
-                                </button>
-                            </div>
-                        `;
+                                <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+                                    <button class="delete-btn" style="background:#f0fdf4;border:none;border-radius:6px;padding:5px 7px;cursor:pointer;color:var(--color-primary);display:flex;align-items:center;gap:3px;font-size:0.75rem;font-weight:600;"
+                                        onclick="event.stopPropagation();openEditAddressModal('${addr.id}')" title="Edit address">
+                                        <i data-lucide="pencil" style="width:13px;height:13px;"></i>
+                                    </button>
+                                    <button class="delete-btn" onclick="deleteAddressUI('${addr.id}', event)" title="Delete address">
+                                        <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+                                    </button>
+                                </div>
+                            </div>`;
                     });
                     addressBodyHtml += '</div>';
                 }
             } else {
+                // New address form — pre-fill from saved state
+                const countryOpts = cachedCountries.map(c =>
+                    `<option value="${c.name}" ${newAddrData.country === c.name ? 'selected' : ''}>${c.name}</option>`
+                ).join('');
+                const stateOpts = cachedStates.map(s =>
+                    `<option value="${s.name}" data-id="${s.id}" ${newAddrData.state === s.name ? 'selected' : ''}>${s.name}</option>`
+                ).join('');
+                const cityOpts = cachedCities.map(c =>
+                    `<option value="${c.name}" ${newAddrData.city === c.name ? 'selected' : ''}>${c.name}</option>`
+                ).join('');
+
                 addressBodyHtml = `
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">First Name *</label>
-                            <input class="form-input" type="text" id="cust-first-name" placeholder="John" required>
+                            <input class="form-input" type="text" id="cust-first-name" placeholder="John" value="${newAddrData.first_name}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Last Name</label>
-                            <input class="form-input" type="text" id="cust-last-name" placeholder="Doe">
+                            <input class="form-input" type="text" id="cust-last-name" placeholder="Doe" value="${newAddrData.last_name}">
                         </div>
                         <div class="form-group full">
-                            <label class="form-label">Email *</label>
-                            <input class="form-input" type="email" id="cust-email" placeholder="you@example.com" required>
+                            <label class="form-label">Email</label>
+                            <input class="form-input" type="email" id="cust-email" placeholder="you@example.com" value="${newAddrData.email}">
                         </div>
                         <div class="form-group full">
                             <label class="form-label">Phone Number *</label>
-                            <input class="form-input" type="tel" id="cust-phone" placeholder="10-digit mobile number" required>
+                            <input class="form-input" type="tel" id="cust-phone" placeholder="10-digit mobile" value="${newAddrData.phone}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Alternate Phone <span style="text-transform:none;color:var(--color-text-light);font-weight:500;">(optional)</span></label>
+                            <input class="form-input" type="tel" id="cust-alt-phone" placeholder="Alt contact" value="${newAddrData.alt_phone}">
                         </div>
                         <div class="form-group full">
                             <label class="form-label">Address Line 1 *</label>
-                            <input class="form-input" type="text" id="cust-address" placeholder="House no, street, locality" required>
+                            <input class="form-input" type="text" id="cust-address" placeholder="House no, street, locality" value="${newAddrData.address1}" required>
                         </div>
                         <div class="form-group full">
-                            <label class="form-label">Address Line 2 <span style="text-transform:none; color:var(--color-text-light); font-weight:500; letter-spacing:normal;">(optional)</span></label>
-                            <input class="form-input" type="text" id="cust-address2" placeholder="Apartment, suite, landmark">
+                            <label class="form-label">Address Line 2 <span style="text-transform:none;color:var(--color-text-light);font-weight:500;">(optional)</span></label>
+                            <input class="form-input" type="text" id="cust-address2" placeholder="Apartment, landmark" value="${newAddrData.address2}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Country *</label>
                             <select class="form-select" id="cust-country" onchange="updateStatesUI()" required>
                                 <option value="">Select Country</option>
-                                ${countries.map(c => `<option value="${c.name}">${c.name}</option>`).join('')}
+                                ${countryOpts}
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">State *</label>
                             <select class="form-select" id="cust-state" onchange="updateCitiesUI()" required>
                                 <option value="">Select State</option>
+                                ${stateOpts}
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">City *</label>
                             <select class="form-select" id="cust-city" required>
                                 <option value="">Select City</option>
+                                ${cityOpts}
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Post Code *</label>
-                            <input class="form-input" type="text" id="cust-postcode" placeholder="000000" required>
+                            <input class="form-input" type="text" id="cust-postcode" placeholder="000000" value="${newAddrData.postcode}" required>
                         </div>
                     </div>
-                `;
+                    <button type="button" id="save-address-btn" class="save-addr-btn" onclick="saveAndUseNewAddress()">
+                        <i data-lucide="save" style="width:15px;height:15px;"></i> Save &amp; Use This Address
+                    </button>`;
             }
 
-            // ── Cart line items (right summary) ──
+            // ── Cart line items ──
             let cartLinesHtml = '';
             cartItems.forEach(item => {
                 const img = MainAPI.getProductImage(item.product);
@@ -907,19 +1233,19 @@
                 const variantId = item.product.variant_id || '';
                 const qtyControl = isBuynow
                     ? `<div class="qty-stepper">
-                                <button onclick="updateBuynowQty('${item.product.id}', '${variantId}', ${item.quantity - 1})">−</button>
-                                <span>${item.quantity}</span>
-                                <button onclick="updateBuynowQty('${item.product.id}', '${variantId}', ${item.quantity + 1})">+</button>
-                            </div>`
+                            <button onclick="updateBuynowQty('${item.product.id}','${variantId}',${item.quantity-1})">−</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="updateBuynowQty('${item.product.id}','${variantId}',${item.quantity+1})">+</button>
+                        </div>`
                     : `<div class="qty-stepper">
-                                <button onclick="CartManager.update('${item.product.id}', ${item.quantity - 1}, '${variantId}')">−</button>
-                                <span>${item.quantity}</span>
-                                <button onclick="CartManager.update('${item.product.id}', ${item.quantity + 1}, '${variantId}')">+</button>
-                            </div>`;
-                const removeBtn = isBuynow ? '' : `
-                        <button class="remove-btn" onclick="CartManager.remove('${item.product.id}', '${variantId}')" title="Remove">
-                            <i data-lucide="x" style="width:18px;height:18px;"></i>
-                        </button>`;
+                            <button onclick="CartManager.update('${item.product.id}',${item.quantity-1},'${variantId}')">−</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="CartManager.update('${item.product.id}',${item.quantity+1},'${variantId}')">+</button>
+                        </div>`;
+                const removeBtn = isBuynow ? '' :
+                    `<button class="remove-btn" onclick="CartManager.remove('${item.product.id}','${variantId}')" title="Remove">
+                        <i data-lucide="x" style="width:18px;height:18px;"></i>
+                    </button>`;
                 cartLinesHtml += `
                     <div class="cart-line">
                         <img src="${img}" class="thumb" alt="${title}">
@@ -930,34 +1256,29 @@
                             ${qtyControl}
                         </div>
                         ${removeBtn}
-                    </div>
-                `;
+                    </div>`;
             });
 
-            // ── Couriers list ──
+            // ── Couriers ──
             let couriersHtml = '';
             if (allAvailableCouriers.length === 0) {
-                couriersHtml = '<p style="font-size:0.88rem; color:var(--color-text-light); margin:0;">Standard delivery will be used.</p>';
+                couriersHtml = '<p style="font-size:0.88rem;color:var(--color-text-light);margin:0;">Standard delivery will be used.</p>';
             } else {
                 couriersHtml = allAvailableCouriers.map(c => {
                     const sel = activeCourier && activeCourier.id === c.id;
-                    return `
-                        <div class="courier-option ${sel ? 'selected' : ''}" onclick="selectCourier('${c.id}')">
-                            <div class="left-grp">
-                                <div class="radio"></div>
-                                <span style="font-weight:600; color:var(--color-primary-dark); font-size:0.92rem;">${c.name}</span>
-                            </div>
-                            <i data-lucide="truck" style="width:16px; height:16px; color:var(--color-text-light);"></i>
+                    return `<div class="courier-option ${sel ? 'selected' : ''}" data-courier-id="${c.id}" onclick="selectCourier('${c.id}')">
+                        <div class="left-grp">
+                            <div class="radio"></div>
+                            <span style="font-weight:600;color:var(--color-primary-dark);font-size:0.92rem;">${c.name}</span>
                         </div>
-                    `;
+                        <i data-lucide="truck" style="width:16px;height:16px;color:var(--color-text-light);"></i>
+                    </div>`;
                 }).join('');
             }
 
-            // ── Final layout ──
             const html = `
                 <div class="checkout-shell">
                     <div class="checkout-grid-v2">
-                        <!-- LEFT: Stepped flow -->
                         <div>
                             <section class="checkout-step">
                                 <div class="step-header">
@@ -967,15 +1288,14 @@
                                 ${isLoggedIn ? `
                                     <div class="addr-toggle">
                                         <label>
-                                            <input type="radio" name="addr-mode" value="existing" ${addressMode === 'existing' ? 'checked' : ''} onchange="toggleAddressMode('existing')">
+                                            <input type="radio" name="addr-mode" value="existing" ${addressMode==='existing'?'checked':''} onchange="toggleAddressMode('existing')">
                                             <span>Saved address</span>
                                         </label>
                                         <label>
-                                            <input type="radio" name="addr-mode" value="new" ${addressMode === 'new' ? 'checked' : ''} onchange="toggleAddressMode('new')">
+                                            <input type="radio" name="addr-mode" value="new" ${addressMode==='new'?'checked':''} onchange="toggleAddressMode('new')">
                                             <span>New address</span>
                                         </label>
-                                    </div>
-                                ` : ''}
+                                    </div>` : ''}
                                 ${addressBodyHtml}
                             </section>
 
@@ -990,43 +1310,31 @@
                             <section class="checkout-step">
                                 <div class="step-header">
                                     <span class="step-number">3</span>
-                                    <h2 class="step-title">Order Notes <span style="color:var(--color-text-light); font-weight:500; font-size:0.85rem;">(optional)</span></h2>
+                                    <h2 class="step-title">Order Notes <span style="color:var(--color-text-light);font-weight:500;font-size:0.85rem;">(optional)</span></h2>
                                 </div>
-                                <textarea id="order-comments" class="form-input" placeholder="Anything we should know about your order?" style="min-height:100px; resize:vertical;"></textarea>
+                                <textarea id="order-comments" class="form-input" placeholder="Anything we should know about your order?" style="min-height:100px;resize:vertical;"></textarea>
                             </section>
                         </div>
 
-                        <!-- RIGHT: Sticky Order Summary -->
                         <aside>
                             <div class="summary-card-v2">
                                 <h3>Order Summary</h3>
                                 <div>${cartLinesHtml}</div>
-
                                 <div class="summary-divider"></div>
-
-                                <div class="summary-row">
-                                    <span>Subtotal</span>
-                                    <span>₹${cartTotal.toFixed(2)}</span>
-                                </div>
-                                <div class="summary-row">
-                                    <span>Delivery</span>
-                                    <span id="summary-delivery-charge">${deliveryDisp}</span>
-                                </div>
+                                <div class="summary-row"><span>Subtotal</span><span id="summary-subtotal">₹${cartTotal.toFixed(2)}</span></div>
+                                <div class="summary-row"><span>Delivery</span><span id="summary-delivery-charge">₹${currentDeliveryCharge.toFixed(2)}</span></div>
                                 <div class="summary-row total">
                                     <span>Total</span>
                                     <span class="amount" id="summary-total-payable">₹${totalPayable.toFixed(2)}</span>
                                 </div>
-
                                 <div class="payment-strip">
                                     <span>Payment Method</span>
                                     <strong>${gatewayNameDisplay}</strong>
                                 </div>
-
                                 <button type="button" id="place-order-btn" class="place-order-btn" onclick="checkout()">
                                     <i data-lucide="shield-check" style="width:18px;height:18px;"></i>
                                     Place Order — ₹${totalPayable.toFixed(2)}
                                 </button>
-
                                 <div class="trust-row">
                                     <div class="trust-item"><i data-lucide="truck"></i> All-India shipping; delivery within 6 working days.</div>
                                     <div class="trust-item"><i data-lucide="alert-circle"></i> Damage claims must be reported within 24 hours of delivery.</div>
@@ -1035,13 +1343,11 @@
                             </div>
                         </aside>
                     </div>
-                </div>
-            `;
+                </div>`;
 
             workspace.innerHTML = html;
-            workspace.style.opacity = '1';
+            restoreComments();
             lucide.createIcons();
-
             isCartLoading = false;
         }
 
@@ -1077,21 +1383,23 @@
                     if (!selectedAddressId) throw new Error('Please select an address before placing order');
                     useAddressId = selectedAddressId;
                 } else {
+                    const f = id => (document.getElementById(id) || {}).value?.trim() || '';
                     newAddress = {
-                        first_name: document.getElementById('cust-first-name').value.trim(),
-                        last_name: document.getElementById('cust-last-name').value.trim(),
-                        email: document.getElementById('cust-email').value.trim(),
-                        phone_number: document.getElementById('cust-phone').value.trim(),
-                        address_line1: document.getElementById('cust-address').value.trim(),
-                        address_line2: document.getElementById('cust-address2').value.trim(),
-                        country: document.getElementById('cust-country').value || 'India',
-                        state: document.getElementById('cust-state').value,
-                        city: document.getElementById('cust-city').value,
-                        postal_code: document.getElementById('cust-postcode').value.trim()
+                        first_name:     f('cust-first-name'),
+                        last_name:      f('cust-last-name'),
+                        email:          f('cust-email'),
+                        phone_number:   f('cust-phone'),
+                        alternate_phone:f('cust-alt-phone') || null,
+                        address_line1:  f('cust-address'),
+                        address_line2:  f('cust-address2') || null,
+                        country:        f('cust-country') || 'India',
+                        state:          f('cust-state'),
+                        city:           f('cust-city'),
+                        postal_code:    f('cust-postcode')
                     };
-                    // Backwards-compatible alias for older save paths
                     newAddress.address_line = newAddress.address_line1;
-                    if (!newAddress.first_name || !newAddress.phone_number || !newAddress.address_line1 || !newAddress.city || !newAddress.state || !newAddress.postal_code) {
+                    if (!newAddress.first_name || !newAddress.phone_number || !newAddress.address_line1 ||
+                        !newAddress.city || !newAddress.state || !newAddress.postal_code) {
                         throw new Error('Please fill all required address fields (*) before placing order');
                     }
                     if (!/^\d{7,15}$/.test(newAddress.phone_number.replace(/\D/g, ''))) {

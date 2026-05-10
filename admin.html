@@ -31,6 +31,7 @@
     <a href="#" class="sidebar-link" data-tab="delivery"><i data-lucide="truck"></i> Delivery</a>
     <a href="#" class="sidebar-link" data-tab="couriers"><i data-lucide="send"></i> Couriers</a>
     <a href="#" class="sidebar-link" data-tab="payment"><i data-lucide="credit-card"></i> Payment</a>
+    <a href="#" class="sidebar-link" data-tab="locations"><i data-lucide="map-pin"></i> Locations</a>
     <a href="#" class="sidebar-link" data-tab="messages"><i data-lucide="mail"></i> Messages</a>
     <a href="#" class="sidebar-link" data-tab="settings"><i data-lucide="settings"></i> Settings</a>
   </nav>
@@ -272,6 +273,56 @@
           <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Phone</th><th>Subject</th><th>Message</th><th>Actions</th></tr></thead>
           <tbody id="messages-tbody"><tr><td colspan="7" class="loading-row">Loading...</td></tr></tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- LOCATIONS TAB -->
+    <section id="tab-locations" class="admin-tab">
+      <div class="tab-header"><h2>Locations</h2></div>
+      
+      <div class="admin-card" style="margin-bottom: 2rem;">
+        <div class="tab-header" style="padding:0; margin-bottom:1rem;">
+          <h3 style="margin:0;">Countries</h3>
+          <button class="btn-primary" onclick="openCountryModal()"><i data-lucide="plus"></i> Add Country</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Name</th><th>Code</th><th>Actions</th></tr></thead>
+            <tbody id="countries-tbody"><tr><td colspan="3" class="loading-row">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="admin-card" style="margin-bottom: 2rem;">
+        <div class="tab-header" style="padding:0; margin-bottom:1rem;">
+          <h3 style="margin:0;">States & Zones</h3>
+          <button class="btn-primary" onclick="openStateModal()"><i data-lucide="plus"></i> Add State</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Name</th><th>Code</th><th>Zone</th><th>Country</th><th>Actions</th></tr></thead>
+            <tbody id="admin-states-tbody"><tr><td colspan="5" class="loading-row">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="tab-header" style="padding:0; margin-bottom:1rem;">
+          <h3 style="margin:0;">Cities</h3>
+          <button class="btn-primary" onclick="openCityModal()"><i data-lucide="plus"></i> Add City</button>
+        </div>
+        <div class="search-bar" style="margin-bottom:1rem;">
+          <select id="city-state-filter" onchange="loadCities(this.value)" style="padding:8px; border-radius:8px; border:1px solid var(--color-border); width:200px;">
+            <option value="">All States</option>
+          </select>
+          <input type="text" id="city-search" placeholder="Search cities..." oninput="filterCities()" style="flex:1;">
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Name</th><th>State</th><th>Actions</th></tr></thead>
+            <tbody id="admin-cities-tbody"><tr><td colspan="3" class="loading-row">Loading...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -652,6 +703,57 @@
         </label>
       </div>
       <div class="modal-footer"><button type="button" class="btn-secondary" onclick="closeAllModals()">Cancel</button><button type="submit" class="btn-primary">Save Courier</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Country Modal -->
+<div id="country-modal" class="admin-modal">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-head"><h3 id="country-modal-title">Add Country</h3><button onclick="closeAllModals()"><i data-lucide="x"></i></button></div>
+    <form id="country-form" onsubmit="saveCountry(event)">
+      <input type="hidden" id="countf-id">
+      <div class="form-group"><label>Country Name *</label><input type="text" id="countf-name" required placeholder="e.g. India"></div>
+      <div class="form-group"><label>Country Code *</label><input type="text" id="countf-code" required placeholder="e.g. IN"></div>
+      <div class="modal-footer"><button type="button" class="btn-secondary" onclick="closeAllModals()">Cancel</button><button type="submit" class="btn-primary">Save Country</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- State Modal -->
+<div id="state-modal" class="admin-modal">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-head"><h3 id="state-modal-title">Add State</h3><button onclick="closeAllModals()"><i data-lucide="x"></i></button></div>
+    <form id="state-form" onsubmit="saveState(event)">
+      <input type="hidden" id="statef-id">
+      <div class="form-group"><label>State Name *</label><input type="text" id="statef-name" required placeholder="e.g. Tamil Nadu"></div>
+      <div class="form-group"><label>State Code *</label><input type="text" id="statef-code" required placeholder="e.g. TN"></div>
+      <div class="form-group"><label>Country *</label><select id="statef-country" required></select></div>
+      <div class="form-group"><label>Delivery Zone</label>
+        <select id="statef-zone">
+          <option value="SOUTH">SOUTH</option>
+          <option value="NORTH">NORTH</option>
+          <option value="EAST">EAST</option>
+          <option value="WEST">WEST</option>
+          <option value="CENTRAL">CENTRAL</option>
+          <option value="REST">REST</option>
+          <option value="NE">NE</option>
+        </select>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn-secondary" onclick="closeAllModals()">Cancel</button><button type="submit" class="btn-primary">Save State</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- City Modal -->
+<div id="city-modal" class="admin-modal">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-head"><h3 id="city-modal-title">Add City</h3><button onclick="closeAllModals()"><i data-lucide="x"></i></button></div>
+    <form id="city-form" onsubmit="saveCity(event)">
+      <input type="hidden" id="cityf-id">
+      <div class="form-group"><label>City Name *</label><input type="text" id="cityf-name" required placeholder="e.g. Chennai"></div>
+      <div class="form-group"><label>State *</label><select id="cityf-state" required></select></div>
+      <div class="modal-footer"><button type="button" class="btn-secondary" onclick="closeAllModals()">Cancel</button><button type="submit" class="btn-primary">Save City</button></div>
     </form>
   </div>
 </div>

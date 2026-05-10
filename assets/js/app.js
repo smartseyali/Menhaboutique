@@ -40,6 +40,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Force top before any deferred content shifts the page
     window.scrollTo(0, 0);
 
+    // ── Hard Version Reset ────────────────────────────────────
+    const APP_VERSION = '1.0.4';
+    const lastVersion = localStorage.getItem('mb_app_version');
+    if (lastVersion !== APP_VERSION) {
+        localStorage.clear(); // Wipe stale cache
+        localStorage.setItem('mb_app_version', APP_VERSION);
+        location.reload();    // One-time fresh reload
+        return;
+    }
+    // ──────────────────────────────────────────────────────────
+
     // Mobile hamburger drawer (works on every page that includes app.js)
     initMobileDrawer();
 
@@ -51,6 +62,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         lucide.createIcons();
     }
 
+    // For logged-in users: pull authoritative cart from Supabase, then poll for changes
+    if (MainAPI.isAuthenticated()) {
+        CartManager.syncFromSupabase()
+            .catch(e => console.warn('Cart sync failed:', e))
+            .finally(() => CartManager.startRealtimeSync());
+    }
+
     // Load Data
     try {
         await Promise.all([
@@ -58,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadCategories(),
             loadProducts()
         ]);
-        
+
         // Re-init icons for dynamic content
         lucide.createIcons();
     } catch (e) {
@@ -66,34 +84,93 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Re-sync cart when user returns to the tab (handles cross-device updates)
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && MainAPI.isAuthenticated()) {
+        CartManager.syncFromSupabase().catch(e => console.warn('Tab visibility cart sync failed:', e));
+    }
+});
+
+let badgeAnimFrame = null;
 function updateCartBadge() {
     const badge = document.getElementById('cart-badge');
     if(!badge) return;
     const count = CartManager.getTotalItems();
-    badge.innerText = count;
+    
+    const oldCount = parseInt(badge.innerText) || 0;
+    if (count === oldCount) {
+        badge.style.display = count > 0 ? 'flex' : 'none';
+        return;
+    }
+
+    // Cancel existing animation loop if any
+    if (badgeAnimFrame) {
+        cancelAnimationFrame(badgeAnimFrame);
+        badgeAnimFrame = null;
+    }
+
+    // "Running count" effect: animate the number change
+    if (count > oldCount) {
+        let current = oldCount;
+        const step = () => {
+            if (current < count) {
+                current++;
+                badge.innerText = current;
+                badgeAnimFrame = requestAnimationFrame(() => setTimeout(step, 40));
+            } else {
+                badge.innerText = count;
+                badgeAnimFrame = null;
+            }
+        };
+        step();
+    } else {
+        badge.innerText = count;
+    }
+    
     if (count > 0) {
         badge.style.display = 'flex';
-        badge.style.transform = "translate(30%, -30%) scale(1.3)";
+        // Pop animation
+        badge.style.transform = "translate(30%, -30%) scale(1.4)";
+        badge.style.transition = "transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
         setTimeout(() => {
             badge.style.transform = "translate(30%, -30%) scale(1)";
-        }, 200);
+        }, 150);
     } else {
         badge.style.display = 'none';
     }
 }
 
-window.addToCartDirect = function(productStr) {
-    const product = JSON.parse(decodeURIComponent(productStr));
-    CartManager.add(product, 1);
+window._productRegistry = window._productRegistry || {};
+
+window.addToCartById = function(key) {
+    const prod = window._productRegistry[key];
+    if (prod) CartManager.add(prod, 1);
 };
 
-window.buyNowDirect = function(productStr) {
-    const product = JSON.parse(decodeURIComponent(productStr));
-    sessionStorage.setItem('mb_buynow', JSON.stringify([{ product, quantity: 1 }]));
+window.buyNowById = function(key) {
+    const prod = window._productRegistry[key];
+    if (!prod) return;
+    sessionStorage.setItem('mb_buynow', JSON.stringify([{ product: prod, quantity: 1 }]));
     window.location.href = 'checkout.html?buynow=1';
 };
 
+window.addToCartDirect = function(prodJson) {
+    try {
+        const prod = JSON.parse(decodeURIComponent(prodJson));
+        CartManager.add(prod, 1);
+    } catch(e) { console.error('addToCartDirect error:', e); }
+};
+
+window.buyNowDirect = function(prodJson) {
+    try {
+        const prod = JSON.parse(decodeURIComponent(prodJson));
+        sessionStorage.setItem('mb_buynow', JSON.stringify([{ product: prod, quantity: 1 }]));
+        window.location.href = 'checkout.html?buynow=1';
+    } catch(e) { console.error('buyNowDirect error:', e); }
+};
+
 window.productCardHtml = function(prod) {
+    window._productRegistry[prod.id] = prod;
     const img = MainAPI.getProductImage(prod);
     const price = MainAPI.getProductPrice(prod);
     const stockStatus = MainAPI.getStockStatus(prod);
@@ -105,14 +182,14 @@ window.productCardHtml = function(prod) {
         const v = prod.product_attributes[0].attribute_value;
         unit = (unit && !v.toLowerCase().includes(unit.toLowerCase())) ? `${v} ${unit}` : v;
     }
-    const safeProdStr = encodeURIComponent(JSON.stringify(prod));
+    const key = prod.id;
     const btns = `
-        <div class="prod-card-btns">
-            <button class="prod-add-btn${canAdd ? '' : ' disabled'}" ${canAdd ? `onclick="event.preventDefault();event.stopPropagation();window.addToCartDirect('${safeProdStr}');"` : 'disabled onclick="event.preventDefault();event.stopPropagation();"'}><i data-lucide="shopping-cart"></i> Cart</button>
-            <button class="prod-buy-btn${canAdd ? '' : ' disabled'}" ${canAdd ? `onclick="event.preventDefault();event.stopPropagation();window.buyNowDirect('${safeProdStr}');"` : 'disabled onclick="event.preventDefault();event.stopPropagation();"'}>Buy Now</button>
+        <div class="prod-card-btns" onclick="event.stopPropagation();">
+            <button class="prod-add-btn${canAdd ? '' : ' disabled'}" ${canAdd ? `onclick="event.stopPropagation();window.addToCartById('${key}');"` : 'disabled'}><i data-lucide="shopping-cart"></i> Cart</button>
+            <button class="prod-buy-btn${canAdd ? '' : ' disabled'}" ${canAdd ? `onclick="event.stopPropagation();window.buyNowById('${key}');"` : 'disabled'}>Buy Now</button>
         </div>`;
     return `
-        <a href="product.html?id=${prod.id}" class="product-card fade-in-stagger">
+        <div class="product-card fade-in-stagger" onclick="window.location.href='product.html?id=${prod.id}';" style="cursor:pointer;">
             <div class="prod-img-box">
                 <img src="${img}" alt="${prod.title}" loading="lazy">
             </div>
@@ -126,7 +203,7 @@ window.productCardHtml = function(prod) {
                 <div class="prod-price">₹${price}</div>
                 ${btns}
             </div>
-        </a>`;
+        </div>`;
 };
 
 window.addEventListener('cartUpdated', updateCartBadge);
@@ -248,7 +325,15 @@ async function loadBanners() {
 
     const banners = await MainAPI.fetchBanners();
     if (!banners || banners.length === 0) {
-        bannerContainer.innerHTML = '<div style="padding:2rem;text-align:center;">Promotional Banner</div>';
+        bannerContainer.innerHTML = `
+            <div style="width:100%; height:100%; background: linear-gradient(135deg, #f8fafc, #f1f5f9); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center;">
+                <div style="width: 60px; height: 60px; background: rgba(0, 77, 64, 0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                    <i data-lucide="sparkles" style="color: var(--color-primary); opacity: 0.5;"></i>
+                </div>
+                <h3 style="color: var(--color-primary-dark); font-size: 1.1rem; font-weight: 700; margin: 0;">Special Offers Coming Soon</h3>
+                <p style="color: var(--color-text-light); font-size: 0.9rem; margin-top: 0.5rem;">Stay tuned for our latest premium self-care collections.</p>
+            </div>`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         return;
     }
 
@@ -310,6 +395,7 @@ async function loadBanners() {
     bannerContainer.addEventListener('mouseenter', () => clearInterval(timer));
     bannerContainer.addEventListener('mouseleave', () => { timer = setInterval(() => goTo(current + 1), 5000); });
     bannerContainer.addEventListener('touchstart', () => clearInterval(timer), { passive: true });
+    bannerContainer.addEventListener('touchend', () => { resetTimer(); }, { passive: true });
 }
 
 async function loadCategories() {

@@ -385,16 +385,23 @@
                 roleChip.innerHTML = '<i data-lucide="user"></i> Customer';
             }
 
-            // Cart count is local — instantaneous
+            // Show local cart count instantly, then refresh from Supabase
             try {
                 document.getElementById('stat-cart').textContent = CartManager.getTotalItems();
             } catch(e) { document.getElementById('stat-cart').textContent = '0'; }
 
-            // Orders + addresses come from API in parallel
+            // Orders + addresses + synced cart count in parallel
+            const syncCart = MainAPI.isAuthenticated()
+                ? CartManager.syncFromSupabase().then(() => {
+                    document.getElementById('stat-cart').textContent = CartManager.getTotalItems();
+                }).catch(() => {})
+                : Promise.resolve();
+
             try {
                 const [orders, addresses] = await Promise.all([
                     MainAPI.getOrders(),
-                    MainAPI.getUserAddresses()
+                    MainAPI.getUserAddresses(),
+                    syncCart
                 ]);
                 document.getElementById('stat-orders').textContent = orders.length;
                 document.getElementById('stat-addresses').textContent = addresses.length;

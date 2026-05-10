@@ -181,6 +181,10 @@
                         <input type="tel" id="addr-phone" required>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Alternate Phone <span style="font-weight:400;color:var(--color-text-light);">(optional)</span></label>
+                    <input type="tel" id="addr-alt-phone" placeholder="Alternate contact number">
+                </div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Country</label>
@@ -209,8 +213,8 @@
         </div>
     </div>
 
-    <script src="assets/js/api.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/api.js?v=1.0.3"></script>
+    <script src="assets/js/app.js?v=1.0.3"></script>
     <script>
         let allAddresses = [];
 
@@ -291,16 +295,16 @@
             if (id) {
                 const addr = allAddresses.find(a => a.id == id);
                 if (addr) {
-                    document.getElementById('addr-first-name').value = addr.first_name;
-                    document.getElementById('addr-last-name').value = addr.last_name;
-                    document.getElementById('addr-line1').value = addr.address_line1;
+                    document.getElementById('addr-first-name').value = addr.first_name || '';
+                    document.getElementById('addr-last-name').value = addr.last_name || '';
+                    document.getElementById('addr-line1').value = addr.address_line1 || '';
                     document.getElementById('addr-line2').value = addr.address_line2 || '';
-                    document.getElementById('addr-zip').value = addr.zip_code;
-                    document.getElementById('addr-phone').value = addr.phone_number;
-                    document.getElementById('addr-city').value = addr.city;
+                    document.getElementById('addr-zip').value = addr.zip_code || '';
+                    document.getElementById('addr-phone').value = addr.phone_number || '';
+                    document.getElementById('addr-alt-phone').value = addr.alternate_phone || '';
                     document.getElementById('addr-default').checked = !!addr.is_default;
-                    
-                    // Trigger location loading
+
+                    // Trigger location cascade
                     const countrySelect = document.getElementById('addr-country');
                     for (let i = 0; i < countrySelect.options.length; i++) {
                         if (countrySelect.options[i].text === addr.country) {
@@ -380,27 +384,58 @@
         document.getElementById('address-form').onsubmit = async (e) => {
             e.preventDefault();
             const countrySelect = document.getElementById('addr-country');
-            
+            const saveBtn = document.querySelector('#address-form .btn-save');
+
             const payload = {
-                id: document.getElementById('addr-id').value,
-                first_name: document.getElementById('addr-first-name').value,
-                last_name: document.getElementById('addr-last-name').value,
-                address_line1: document.getElementById('addr-line1').value,
-                address_line2: document.getElementById('addr-line2').value,
-                zip_code: document.getElementById('addr-zip').value,
-                phone_number: document.getElementById('addr-phone').value,
-                country: countrySelect.options[countrySelect.selectedIndex].text,
+                id: document.getElementById('addr-id').value || null,
+                first_name: document.getElementById('addr-first-name').value.trim(),
+                last_name: document.getElementById('addr-last-name').value.trim(),
+                address_line1: document.getElementById('addr-line1').value.trim(),
+                address_line2: document.getElementById('addr-line2').value.trim() || null,
+                zip_code: document.getElementById('addr-zip').value.trim(),
+                phone_number: document.getElementById('addr-phone').value.trim(),
+                alternate_phone: document.getElementById('addr-alt-phone').value.trim() || null,
+                country: countrySelect.options[countrySelect.selectedIndex]
+                    ? countrySelect.options[countrySelect.selectedIndex].text
+                    : 'India',
                 state: document.getElementById('addr-state').value,
                 city: document.getElementById('addr-city').value,
                 is_default: document.getElementById('addr-default').checked
             };
 
+            if (!payload.first_name || !payload.address_line1 || !payload.zip_code ||
+                !payload.phone_number || !payload.state || !payload.city) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Please fill all required fields', 'error');
+                } else {
+                    alert('Please fill all required fields');
+                }
+                return;
+            }
+
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+            }
+
             try {
                 await MainAPI.upsertUserAddress(payload);
                 closeAddressModal();
                 await loadAddresses();
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Address saved successfully!', 'success');
+                }
             } catch (err) {
-                alert('Error saving address: ' + err.message);
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Error saving address: ' + (err.message || 'Please try again'), 'error');
+                } else {
+                    alert('Error saving address: ' + err.message);
+                }
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Address';
+                }
             }
         };
 
@@ -409,8 +444,15 @@
             try {
                 await MainAPI.deleteAddress(id);
                 await loadAddresses();
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Address deleted', 'info');
+                }
             } catch (err) {
-                alert('Error deleting address: ' + err.message);
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Error deleting address: ' + (err.message || ''), 'error');
+                } else {
+                    alert('Error deleting address: ' + err.message);
+                }
             }
         }
     </script>
