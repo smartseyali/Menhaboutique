@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/lucide@0.407.0/dist/umd/lucide.js"></script>
-    <link rel="stylesheet" href="assets/css/style.css?v=1.0.5">
+    <link rel="stylesheet" href="assets/css/style.css?v=1.0.6">
     <style>
         .page-header {
             background: var(--color-white);
@@ -123,7 +123,7 @@
             <p id="category-page-subtitle" style="color: var(--color-text-light); margin-top: 0.5rem; display: none;">
                 Showing products for selected category</p>
             <button id="back-to-categories" onclick="showAllCategories()"
-                style="display: none; margin: 1rem auto 0; background: var(--color-primary); color: white; border: none; padding: 8px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; align-items: center; gap: 8px;">
+                style="display: none; margin: 1rem auto 0; background: var(--color-primary); color: white; border: none; padding: 8px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; align-items: center; gap: 8px;">
                 <i data-lucide="arrow-left" style="width: 16px;"></i> Back to Categories
             </button>
         </div>
@@ -152,12 +152,9 @@
                         We are committed to providing high-quality offerings designed to support daily wellness,
                         hygiene, and overall well-being.</p>
                     <div class="social-links">
-                        <a href="https://www.facebook.com/share/1Cc8K6GPUV/" target="_blank" rel="noopener noreferrer" class="social-link" title="Facebook"><i
-                                data-lucide="facebook"></i></a>
-                        <a href="https://www.instagram.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram"><i
-                                data-lucide="instagram"></i></a>
-                        <a href="https://www.youtube.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Youtube"><i
-                                data-lucide="youtube"></i></a>
+                        <a href="https://www.facebook.com/share/1Cc8K6GPUV/" target="_blank" rel="noopener noreferrer" class="social-link" title="Facebook"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                        <a href="https://www.instagram.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                        <a href="https://www.youtube.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Youtube"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.1C5.12 19.54 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>
                     </div>
                 </div>
 
@@ -204,8 +201,8 @@
         document.getElementById('current-year').textContent = new Date().getFullYear();
     </script>
 
-    <script src="assets/js/api.js?v=1.0.5"></script>
-    <script src="assets/js/app.js?v=1.0.5"></script>
+    <script src="assets/js/api.js?v=1.0.6"></script>
+    <script src="assets/js/app.js?v=1.0.6"></script>
     <script>
         let allCategories = [];
         let currentCategoryProducts = [];
@@ -306,7 +303,7 @@
                 searchBar = document.createElement('div');
                 searchBar.id = 'product-search-bar';
                 searchBar.style.cssText = 'width:100%;max-width:480px;margin:0.75rem auto 0;';
-                searchBar.innerHTML = `<div style="position:relative;"><input id="product-search-input" type="text" placeholder="Search products..." style="width:100%;padding:10px 16px 10px 40px;border-radius:50px;border:2px solid var(--color-border);font-family:inherit;font-size:0.92rem;outline:none;transition:0.2s;" oninput="filterProductSearch(this.value)" onfocus="this.style.borderColor='var(--color-primary)'" onblur="this.style.borderColor='var(--color-border)'"><i data-lucide="search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--color-text-light);pointer-events:none;"></i></div>`;
+                searchBar.innerHTML = `<div style="position:relative;"><input id="product-search-input" type="text" placeholder="Search products..." style="width:100%;padding:10px 16px 10px 40px;border-radius:10px;border:2px solid var(--color-border);font-family:inherit;font-size:0.92rem;outline:none;transition:0.2s;" oninput="filterProductSearch(this.value)" onfocus="this.style.borderColor='var(--color-primary)'" onblur="this.style.borderColor='var(--color-border)'"><i data-lucide="search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--color-text-light);pointer-events:none;"></i></div>`;
                 const pageHeader = document.querySelector('.page-header .container');
                 pageHeader.appendChild(searchBar);
                 lucide.createIcons();

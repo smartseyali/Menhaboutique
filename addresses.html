@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <link rel="stylesheet" href="assets/css/style.css?v=1.0.5">
+    <link rel="stylesheet" href="assets/css/style.css?v=1.0.6">
     <style>
         .modal-overlay {
             position: fixed;
@@ -76,7 +76,7 @@
             color: white;
             border: none;
             padding: 14px;
-            border-radius: 50px;
+            border-radius: 10px;
             width: 100%;
             font-weight: 700;
             cursor: pointer;
@@ -135,7 +135,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <h2 style="color: var(--color-primary-dark);">Saved Addresses</h2>
             <button onclick="openAddressModal()" 
-                style="background: var(--color-primary); color: white; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                style="background: var(--color-primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                 <i data-lucide="plus"></i> Add New
             </button>
         </div>
@@ -206,15 +206,59 @@
                     <label for="addr-default" style="margin: 0;">Set as default address</label>
                 </div>
                 <div style="display: flex; gap: 1rem;">
-                    <button type="button" onclick="closeAddressModal()" style="flex: 1; background: #eee; border: none; padding: 14px; border-radius: 50px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Cancel</button>
+                    <button type="button" onclick="closeAddressModal()" style="flex: 1; background: #eee; border: none; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Cancel</button>
                     <button type="submit" class="btn-save">Save Address</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="assets/js/api.js?v=1.0.5"></script>
-    <script src="assets/js/app.js?v=1.0.5"></script>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-block footer-brand">
+                    <img src="assets/images/logo.jpg" alt="Menha Boutique" class="logo-img">
+                    <span class="brand-text" style="font-size:1.25rem;font-weight:800;color:var(--color-white);display:block;margin-bottom:0.5rem;">Menha Boutique</span>
+                    <p>Experience the best in self-care with our premium range of personal care and self-care solutions.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/share/1Cc8K6GPUV/" target="_blank" rel="noopener noreferrer" class="social-link" title="Facebook"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                        <a href="https://www.instagram.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                        <a href="https://www.youtube.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Youtube"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.1C5.12 19.54 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>
+                    </div>
+                </div>
+                <div class="footer-block">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="categories.html">Categories</a></li>
+                        <li><a href="products.html">All Products</a></li>
+                        <li><a href="cart.html">Shopping Cart</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h3 class="footer-title">Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms &amp; Conditions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h3 class="footer-title">Contact Info</h3>
+                    <ul class="footer-links">
+                        <li style="display:flex;align-items:center;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="map-pin" style="width:24px;height:24px;flex-shrink:0;"></i> No 9. East Street, Madhampatti, Coimbatore 641010</li>
+                        <li style="display:flex;align-items:flex-start;gap:10px;color:var(--color-light-gray);opacity:0.8;margin-bottom:0.8rem;"><i data-lucide="phone" style="width:18px;flex-shrink:0;margin-top:3px;"></i><span>Call: 9500600525<br>WhatsApp: 8973355559<br>Customer Care: 7708853119</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">&copy; <span id="current-year"></span> Menha Boutique. All rights reserved.</div>
+        </div>
+    </footer>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+
+    <script src="assets/js/api.js?v=1.0.6"></script>
+    <script src="assets/js/app.js?v=1.0.6"></script>
     <script>
         let allAddresses = [];
 
@@ -251,7 +295,7 @@
                 allAddresses.forEach(addr => {
                     html += `
                         <div style="background: white; border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--color-border); position: relative;">
-                            ${addr.is_default ? '<span style="position: absolute; top: 1.5rem; left: 1.5rem; background: var(--color-primary); color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; z-index: 1;">Default</span>' : ''}
+                            ${addr.is_default ? '<span style="position: absolute; top: 1.5rem; left: 1.5rem; background: var(--color-primary); color: white; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; z-index: 1;">Default</span>' : ''}
                             
                             <div class="address-actions">
                                 <button class="action-icon-btn" onclick="openAddressModal('${addr.id}')" title="Edit"><i data-lucide="pencil"></i></button>

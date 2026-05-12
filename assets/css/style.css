@@ -256,7 +256,7 @@ img {
     font-size: 0.6rem;
     font-weight: 700;
     padding: 2px 6px;
-    border-radius: 999px;
+    border-radius: 6px;
     letter-spacing: 0;
     border: 1px solid transparent;
     white-space: nowrap;
@@ -523,9 +523,6 @@ img {
 .zoom-frame:hover img {
     transform: scale(1.12);
 }
-@media (hover: none) {
-    .zoom-frame:hover img { transform: none; }
-}
 
 /* Banner */
 .banner-section {
@@ -541,11 +538,17 @@ img {
 }
 
 .banner-carousel {
-    aspect-ratio: 16 / 5.1;
+    aspect-ratio: 16 / 5.5;
     width: 100%;
     position: relative;
     overflow: hidden;
     background: var(--color-light-gray);
+}
+
+@media (max-width: 768px) {
+    .banner-carousel {
+        aspect-ratio: 2 / 1;
+    }
 }
 
 .banner-slide {
@@ -668,6 +671,11 @@ img {
     font-weight: 600;
     color: var(--color-text);
     text-align: center;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
 }
 
 /* Products */
@@ -684,7 +692,7 @@ img {
     color: var(--color-primary);
     background: rgba(0, 77, 64, 0.1);
     padding: 6px 16px;
-    border-radius: 20px;
+    border-radius: 10px;
 }
 
 .view-all-btn:hover {
@@ -1130,7 +1138,7 @@ img {
     font-size: 0.68rem;
     font-weight: 700;
     padding: 2px 7px;
-    border-radius: 50px;
+    border-radius: 6px;
     display: inline-flex;
     align-items: center;
     flex-shrink: 1;
@@ -1150,7 +1158,7 @@ img {
 }
 .prod-add-btn,
 .prod-buy-btn {
-    border-radius: 50px;
+    border-radius: 10px;
     padding: 7px 6px;
     font-size: 0.73rem;
     font-weight: 700;
@@ -1367,4 +1375,68 @@ button svg,
     transition: background 0.2s;
 }
 .save-addr-btn:hover { background: var(--color-primary-dark); }
-.save-addr-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.save-addr-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Disable hover transforms on touch devices (prevents accidental image zoom & lift) ── */
+@media (hover: none) {
+    .product-card:hover {
+        transform: none;
+        box-shadow: var(--shadow-md);
+    }
+    .product-card:hover .prod-img-box img {
+        transform: none;
+    }
+    .category-item:hover .cat-img-wrapper {
+        transform: none;
+        box-shadow: var(--shadow-sm);
+        border-color: transparent;
+    }
+    .zoom-frame:hover img {
+        transform: none;
+    }
+}
+
+/* ── Mobile product card buttons — compact for 2-col grid ── */
+@media (max-width: 480px) {
+    .prod-card-btns {
+        gap: 4px;
+    }
+    .prod-add-btn,
+    .prod-buy-btn {
+        padding: 6px 4px;
+        font-size: 0.65rem;
+        min-height: 32px;
+    }
+    .prod-add-btn svg,
+    .prod-buy-btn svg {
+        display: none;
+    }
+}
+
+/* ── Footer responsive — ensure full width on all screens ── */
+@media (max-width: 480px) {
+    .footer-container {
+        gap: 1.25rem;
+    }
+    .footer-brand p {
+        font-size: 0.85rem;
+    }
+    .footer-title {
+        font-size: 1rem;
+    }
+    .footer-links a,
+    .footer-links li {
+        font-size: 0.88rem;
+    }
+}
+
+/* ── Ensure header brand never overflows on very small screens ── */
+@media (max-width: 360px) {
+    .brand-text {
+        font-size: 0.88rem !important;
+        max-width: 130px;
+    }
+    .logo-img {
+        height: 28px !important;
+    }
+}

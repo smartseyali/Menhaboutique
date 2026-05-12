@@ -7,7 +7,7 @@
     <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@0.407.0/dist/umd/lucide.js"></script>
-    <link rel="stylesheet" href="assets/css/style.css?v=1.0.5">
+    <link rel="stylesheet" href="assets/css/style.css?v=1.0.6">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -62,21 +62,21 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: var(--color-light-gray);
-            padding: 4px 8px;
-            border-radius: 999px;
+            background: none;
+            padding: 4px 0;
+            border-radius: 10px;
             margin-top: 8px;
         }
         .cart-qty-stepper button {
-            background: #fff;
-            border: 1px solid var(--color-border);
+            background: none;
+            border: none;
             cursor: pointer;
             color: var(--color-primary);
             font-weight: 700;
             width: 26px; height: 26px;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
         .cart-qty-stepper span {
             min-width: 20px;
@@ -224,9 +224,9 @@
                     <span class="brand-text" style="font-size: 1.25rem; font-weight: 800; color: var(--color-white); display: block; margin-bottom: 0.5rem;">Menha Boutique</span>
                     <p>Experience the best in self-care with our premium range of personal care and self-care solutions.</p>
                     <div class="social-links">
-                        <a href="https://www.facebook.com/share/1Cc8K6GPUV/" target="_blank" rel="noopener noreferrer" class="social-link" title="Facebook"><i data-lucide="facebook"></i></a>
-                        <a href="https://www.instagram.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram"><i data-lucide="instagram"></i></a>
-                        <a href="https://www.youtube.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Youtube"><i data-lucide="youtube"></i></a>
+                        <a href="https://www.facebook.com/share/1Cc8K6GPUV/" target="_blank" rel="noopener noreferrer" class="social-link" title="Facebook"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                        <a href="https://www.instagram.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                        <a href="https://www.youtube.com/menhaboutique" target="_blank" rel="noopener noreferrer" class="social-link" title="Youtube"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.1C5.12 19.54 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>
                     </div>
                 </div>
                 <div class="footer-block">
@@ -265,8 +265,8 @@
     </footer>
     <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
 
-    <script src="assets/js/api.js?v=1.0.5"></script>
-    <script src="assets/js/app.js?v=1.0.5"></script>
+    <script src="assets/js/api.js?v=1.0.6"></script>
+    <script src="assets/js/app.js?v=1.0.6"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
@@ -285,7 +285,7 @@
                         <i data-lucide="shopping-bag" style="width:70px;height:70px;color:var(--color-border);margin-bottom:1.25rem;"></i>
                         <h2 style="color:var(--color-primary-dark);margin-bottom:0.5rem;">Your cart is empty</h2>
                         <p style="color:var(--color-text-light);margin-bottom:1.5rem;">Looks like you haven't added anything yet.</p>
-                        <a href="index.html" style="background:var(--color-primary);color:#fff;padding:14px 32px;border-radius:50px;font-weight:700;display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
+                        <a href="index.html" style="background:var(--color-primary);color:#fff;padding:14px 32px;border-radius:10px;font-weight:700;display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
                             <i data-lucide="arrow-right"></i> Start Shopping
                         </a>
                     </div>
@@ -354,34 +354,7 @@
             try {
                 const products = await MainAPI.fetchProducts();
                 if (!products || products.length === 0) return;
-                const sample = products.slice(0, 4);
-                let html = '';
-                sample.forEach(prod => {
-                    const img = MainAPI.getProductImage(prod);
-                    const price = MainAPI.getProductPrice(prod);
-                    const stockStatus = MainAPI.getStockStatus(prod);
-                    const canAdd = stockStatus === 'In Stock';
-                    const safeProdStr = encodeURIComponent(JSON.stringify(prod));
-                    html += `
-                        <a href="product.html?id=${prod.id}" class="product-card fade-in-stagger">
-                            <div class="prod-img-box">
-                                <img src="${img}" alt="${prod.title}" loading="lazy">
-                                <div class="card-actions">
-                                    ${canAdd ? `<button class="icon-btn tooltip" onclick="event.preventDefault();event.stopPropagation();window.addToCartDirect('${safeProdStr}');" title="Add to Cart"><i data-lucide="shopping-cart"></i></button>` : ''}
-                                    ${canAdd ? `<button class="icon-btn tooltip" style="background: var(--color-accent); color: var(--color-primary-dark);" onclick="event.preventDefault();event.stopPropagation();window.buyNowDirect('${safeProdStr}');" title="Buy Now"><i data-lucide="zap"></i></button>` : ''}
-                                </div>
-                            </div>
-                            <div class="prod-info">
-                                <h3 class="prod-title">${prod.title}</h3>
-                                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                                    <div class="prod-price">₹${price}</div>
-                                    <span class="stock-pill ${stockStatus === 'In Stock' ? 'in-stock' : 'out-of-stock'}">${stockStatus}</span>
-                                </div>
-                            </div>
-                        </a>
-                    `;
-                });
-                grid.innerHTML = html;
+                grid.innerHTML = products.slice(0, 4).map(p => window.productCardHtml(p)).join('');
                 relatedSection.style.display = 'block';
                 lucide.createIcons();
             } catch(e) {

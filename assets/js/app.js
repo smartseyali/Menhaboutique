@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.scrollTo(0, 0);
 
     // ── Hard Version Reset ────────────────────────────────────
-    const APP_VERSION = '1.0.4';
+    const APP_VERSION = '1.0.6';
     const lastVersion = localStorage.getItem('mb_app_version');
     if (lastVersion !== APP_VERSION) {
         localStorage.clear(); // Wipe stale cache

@@ -133,6 +133,7 @@ function handleLogout() {
 // ── SIDEBAR ───────────────────────────────────────────────
 function toggleSidebar() {
     document.getElementById('adminSidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('open');
 }
 
 // ── TABS ──────────────────────────────────────────────────
@@ -146,6 +147,7 @@ function initTabs() {
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
             document.getElementById('adminSidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('open');
             await loadTab(tab);
         });
     });
