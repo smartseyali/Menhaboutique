@@ -89,8 +89,14 @@
             <div>
                 <label
                     style="display: block; font-size: 0.9rem; font-weight: 600; color: var(--color-primary-dark); margin-bottom: 0.5rem;">Password</label>
-                <input type="password" id="login-password" placeholder="••••••••" required
-                    style="width: 100%; padding: 14px 20px; border-radius: 12px; border: 2px solid var(--color-border); outline: none; transition: 0.3s; font-family: inherit; font-size: 1rem;">
+                <div style="position: relative;">
+                    <input type="password" id="login-password" placeholder="••••••••" required
+                        style="width: 100%; padding: 14px 50px 14px 20px; border-radius: 12px; border: 2px solid var(--color-border); outline: none; transition: 0.3s; font-family: inherit; font-size: 1rem; box-sizing: border-box;">
+                    <button type="button" id="toggle-password" aria-label="Toggle password visibility"
+                        style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--color-text-light); padding: 4px; display: flex; align-items: center; transition: color 0.2s;">
+                        <i data-lucide="eye" id="eye-icon" style="width: 20px; height: 20px;"></i>
+                    </button>
+                </div>
             </div>
 
             <button type="submit" id="login-submit"
@@ -187,6 +193,16 @@
             inputs.forEach(input => {
                 input.addEventListener('focus', () => input.style.borderColor = 'var(--color-primary)');
                 input.addEventListener('blur', () => input.style.borderColor = 'var(--color-border)');
+            });
+
+            const toggleBtn = document.getElementById('toggle-password');
+            const pwdInput = document.getElementById('login-password');
+            const eyeIconEl = document.getElementById('eye-icon');
+            toggleBtn.addEventListener('click', () => {
+                const isPassword = pwdInput.type === 'password';
+                pwdInput.type = isPassword ? 'text' : 'password';
+                eyeIconEl.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
+                lucide.createIcons();
             });
 
             const form = document.getElementById('login-form');

@@ -320,7 +320,6 @@ function initAuthUI() {
 
 async function loadBanners() {
     const bannerContainer = document.getElementById('banner-container');
-    const indicatorsContainer = document.getElementById('banner-indicators');
     if (!bannerContainer) return;
 
     const banners = await MainAPI.fetchBanners();
@@ -339,20 +338,16 @@ async function loadBanners() {
 
     // Build slides
     bannerContainer.innerHTML = banners.map((banner, i) => {
-        const img = banner.imageUrl || banner.image_url || 'https://via.placeholder.com/1200x500';
+        const img = banner.imageUrl || banner.image_url || '';
         const link = banner.link || banner.link_url || banner.redirect_url || banner.url || '';
+        const imgTag = img
+            ? `<img src="${img}" alt="Banner ${i + 1}" class="banner-img" loading="${i === 0 ? 'eager' : 'lazy'}" decoding="async" onerror="this.parentElement.style.background='linear-gradient(135deg,#f1f5f9,#e2e8f0)';this.style.display='none';">`
+            : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);"></div>`;
         const inner = link
-            ? `<a href="${link}" style="display:block;width:100%;height:100%;"><img src="${img}" alt="Banner ${i + 1}" class="banner-img"></a>`
-            : `<img src="${img}" alt="Banner ${i + 1}" class="banner-img">`;
+            ? `<a href="${link}" style="display:block;width:100%;height:100%;">${imgTag}</a>`
+            : imgTag;
         return `<div class="banner-slide${i === 0 ? ' active' : ''}">${inner}</div>`;
     }).join('');
-
-    // Build dot indicators
-    if (indicatorsContainer) {
-        indicatorsContainer.innerHTML = banners.map((_, i) =>
-            `<button class="carousel-dot${i === 0 ? ' active' : ''}" onclick="carouselGoTo(${i})" aria-label="Slide ${i + 1}"></button>`
-        ).join('');
-    }
 
     // Show nav buttons only if more than 1 slide
     const prevBtn = document.getElementById('carousel-prev');
@@ -361,41 +356,69 @@ async function loadBanners() {
         if (prevBtn) prevBtn.style.display = 'none';
         if (nextBtn) nextBtn.style.display = 'none';
     }
-    if (typeof lucide !== 'undefined') lucide.createIcons();
 
     let current = 0;
     const slides = bannerContainer.querySelectorAll('.banner-slide');
-    const dots = indicatorsContainer ? indicatorsContainer.querySelectorAll('.carousel-dot') : [];
 
     function goTo(index) {
         const prev = current;
         current = (index + banners.length) % banners.length;
         if (prev === current) return;
 
+        // Instantly snap the incoming slide to off-screen right with no transition,
+        // so it never mid-transitions from a previous slide-out position
+        slides[current].style.transition = 'none';
+        slides[current].classList.remove('active', 'slide-out');
+        void slides[current].offsetWidth; // commit the instant position to the browser
+
+        // Double rAF: first frame commits the snap, second frame enables transition and animates in
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                slides[current].style.transition = '';
+                slides[current].classList.add('active');
+            });
+        });
+
+        // Slide previous slide out to left
         slides[prev].classList.add('slide-out');
         slides[prev].classList.remove('active');
-        slides[current].style.transform = 'translateX(100%)';
-        slides[current].classList.remove('slide-out');
-        // Force reflow then activate
-        slides[current].offsetWidth;
-        slides[current].classList.add('active');
 
-        setTimeout(() => slides[prev].classList.remove('slide-out'), 650);
-
-        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        // After animation ends, snap old slide back to right instantly (no visible flash)
+        setTimeout(() => {
+            slides[prev].style.transition = 'none';
+            slides[prev].classList.remove('slide-out');
+            void slides[prev].offsetWidth;
+            slides[prev].style.transition = '';
+        }, 600);
     }
 
     window.carouselGoTo = goTo;
     window.carouselNext = () => { goTo(current + 1); resetTimer(); };
     window.carouselPrev = () => { goTo(current - 1); resetTimer(); };
 
-    let timer = setInterval(() => goTo(current + 1), 5000);
-    function resetTimer() { clearInterval(timer); timer = setInterval(() => goTo(current + 1), 5000); }
+    let timer = banners.length > 1 ? setInterval(() => goTo(current + 1), 4000) : null;
+    function resetTimer() {
+        if (!timer && banners.length <= 1) return;
+        clearInterval(timer);
+        timer = setInterval(() => goTo(current + 1), 4000);
+    }
 
     bannerContainer.addEventListener('mouseenter', () => clearInterval(timer));
-    bannerContainer.addEventListener('mouseleave', () => { timer = setInterval(() => goTo(current + 1), 5000); });
-    bannerContainer.addEventListener('touchstart', () => clearInterval(timer), { passive: true });
-    bannerContainer.addEventListener('touchend', () => { resetTimer(); }, { passive: true });
+    bannerContainer.addEventListener('mouseleave', () => resetTimer());
+
+    // Swipe support
+    let touchStartX = 0;
+    bannerContainer.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        clearInterval(timer);
+    }, { passive: true });
+    bannerContainer.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) {
+            dx < 0 ? goTo(current + 1) : goTo(current - 1);
+        }
+        resetTimer();
+    }, { passive: true });
 }
 
 async function loadCategories() {
