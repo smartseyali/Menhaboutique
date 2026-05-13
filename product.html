@@ -38,6 +38,7 @@
             align-items: center;
             justify-content: center;
             touch-action: pan-y;
+            position: relative;
         }
 
         .pd-main-img-wrap img {
@@ -520,6 +521,28 @@
 
         /* Hide inline CTA on mobile (use sticky bar instead) */
         .pd-inline-cta { display: none; }
+
+        /* Mobile zoom hint badge */
+        .pd-zoom-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.42);
+            color: #fff;
+            border-radius: 20px;
+            padding: 4px 10px 4px 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            pointer-events: none;
+            transition: opacity 0.25s;
+            z-index: 2;
+        }
+        @media (min-width: 768px) {
+            .pd-zoom-hint { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -772,6 +795,7 @@
                         <div class="pd-gallery">
                             <div class="pd-main-img-wrap" id="zoom-container">
                                 <img src="${img}" alt="${title}" id="main-product-img">
+                                <div class="pd-zoom-hint" id="zoom-hint"><i data-lucide="zoom-in" style="width:13px;height:13px;pointer-events:none;"></i> Tap to zoom</div>
                             </div>
                             ${thumbsHtml}
                         </div>
@@ -833,6 +857,46 @@
                     mainImg.style.transform = 'scale(2.5)';
                 });
                 zoomContainer.addEventListener('mouseleave', () => { mainImg.style.transform = 'scale(1)'; });
+
+                // Mobile tap-to-zoom + pan
+                let mobileZoomed = false;
+                let touchStartX = 0, touchStartY = 0;
+
+                zoomContainer.addEventListener('touchstart', e => {
+                    if (window.innerWidth >= 768) return;
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                }, { passive: true });
+
+                zoomContainer.addEventListener('touchmove', e => {
+                    if (!mobileZoomed || window.innerWidth >= 768) return;
+                    const t = e.touches[0];
+                    const r = zoomContainer.getBoundingClientRect();
+                    mainImg.style.transformOrigin = `${((t.clientX - r.left) / r.width) * 100}% ${((t.clientY - r.top) / r.height) * 100}%`;
+                    e.preventDefault();
+                }, { passive: false });
+
+                zoomContainer.addEventListener('touchend', e => {
+                    if (window.innerWidth >= 768) return;
+                    const t = e.changedTouches[0];
+                    const dx = Math.abs(t.clientX - touchStartX);
+                    const dy = Math.abs(t.clientY - touchStartY);
+                    if (!mobileZoomed && dx < 10 && dy < 10) {
+                        const r = zoomContainer.getBoundingClientRect();
+                        mainImg.style.transformOrigin = `${((t.clientX - r.left) / r.width) * 100}% ${((t.clientY - r.top) / r.height) * 100}%`;
+                        mainImg.style.transform = 'scale(2.2)';
+                        zoomContainer.style.touchAction = 'none';
+                        mobileZoomed = true;
+                        const hint = document.getElementById('zoom-hint');
+                        if (hint) hint.style.opacity = '0';
+                    } else if (mobileZoomed && dx < 10 && dy < 10) {
+                        mainImg.style.transform = 'scale(1)';
+                        zoomContainer.style.touchAction = 'pan-y';
+                        mobileZoomed = false;
+                        const hint = document.getElementById('zoom-hint');
+                        if (hint) hint.style.opacity = '1';
+                    }
+                }, { passive: true });
 
                 // Shared cart/buy logic
                 function buildCartItem() {
