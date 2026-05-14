@@ -38,6 +38,10 @@
             padding: 1.25rem 0;
             border-bottom: 1px solid var(--color-border);
             margin-bottom: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-sm);
         }
         .checkout-header .container {
             display: flex; justify-content: space-between; align-items: center;
@@ -137,10 +141,10 @@
         }
         .saved-address-body .phone { color: var(--color-text-light); }
         .saved-address .delete-btn {
-            position: absolute; top: 12px; right: 12px;
             background: transparent; border: none; cursor: pointer;
             color: #cbd5e0; padding: 4px;
             transition: color 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
         .saved-address .delete-btn:hover { color: #e53e3e; }
 
